@@ -26,13 +26,21 @@ const CSS = `
 .lp-item {
     animation: lp-fadeUp 0.45s cubic-bezier(0.4,0,0.2,1) both;
 }
-.lp-item:nth-child(1) { animation-delay: 0.10s; }
-.lp-item:nth-child(2) { animation-delay: 0.18s; }
-.lp-item:nth-child(3) { animation-delay: 0.26s; }
-.lp-item:nth-child(4) { animation-delay: 0.34s; }
+.lp-item:nth-child(1) { animation-delay: 0.08s; }
+.lp-item:nth-child(2) { animation-delay: 0.14s; }
+.lp-item:nth-child(3) { animation-delay: 0.20s; }
+.lp-item:nth-child(4) { animation-delay: 0.26s; }
+.lp-item:nth-child(5) { animation-delay: 0.32s; }
+.lp-item:nth-child(6) { animation-delay: 0.38s; }
+.lp-item:nth-child(7) { animation-delay: 0.44s; }
+.lp-item:nth-child(8)  { animation-delay: 0.50s; }
+.lp-item:nth-child(9)  { animation-delay: 0.56s; }
+.lp-item:nth-child(10) { animation-delay: 0.62s; }
+.lp-item:nth-child(11) { animation-delay: 0.68s; }
+.lp-item:nth-child(12) { animation-delay: 0.74s; }
 
 @media (max-width: 1024px) {
-    .lp-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .lp-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
 }
 @media (max-width: 768px) {
     .lp-root { padding: 0 18px; margin: 56px auto; }
@@ -45,7 +53,7 @@ const CSS = `
 `;
 
 const LatestProducts = () => {
-    const displayQuantity = 4;
+    const displayQuantity = 12;
     const products = useSelector(state => state.product.items);
 
     const latestProducts = [...products]
@@ -67,7 +75,7 @@ const LatestProducts = () => {
                 />
                 <div className='lp-grid'>
                     {latestProducts.map((product, index) => (
-                        <div key={product.id} className='lp-item' style={{ animationDelay: `${0.1 + index * 0.08}s` }}>
+                        <div key={product.id} className='lp-item' style={{ animationDelay: `${0.08 + index * 0.06}s` }}>
                             <ProductCard product={product} />
                         </div>
                     ))}

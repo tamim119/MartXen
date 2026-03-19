@@ -19,8 +19,8 @@ export const createStore = async (userId, data, logoFile) => {
         ...data,
         userId,
         logo,
-        status: "approved",   // ✅ সরাসরি approved
-        isActive: true,        // ✅ সরাসরি active
+        status: "pending",    // ← admin approval দরকার
+        isActive: false,       // ← approved হলে active হবে
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     });

@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useCurrentUser } from "../hooks/useAuth";
-import { useFloatingToast } from "../components/FloatingToastProvider";
 import { db } from "../lib/firebase";
 import {
     collection, addDoc, onSnapshot,
     doc, serverTimestamp, getDoc
 } from "firebase/firestore";
-import { clearCart } from "../lib/features/cart/cartSlice";
+import { clearCart, syncCartToFirestore } from "../lib/features/cart/cartSlice";
 import { validateCoupon } from "../lib/services/couponService";
 import Loading from "../components/Loading";
 import { DIVISIONS, getShippingFee } from "./AddressBook";
@@ -57,6 +56,21 @@ const CSS = `
 .co-hero-sub { font-size: 0.9rem; color: #64748b; max-width: 380px; margin: 0 auto; line-height: 1.65; }
 
 .co-body { max-width: 1100px; margin: 0 auto; padding: 48px 40px 80px; display: grid; grid-template-columns: 1fr 360px; gap: 48px; align-items: start; animation: co-fadeUp 0.5s 0.1s cubic-bezier(0.4,0,0.2,1) both; }
+
+/* ── Inline Alert ── */
+.co-alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 12px; font-size: 0.825rem; font-weight: 500; line-height: 1.5; margin-bottom: 18px; }
+.co-alert-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-size: 0.65rem; font-weight: 800; }
+.co-alert.error   { background: #fff1f2; border: 1.5px solid #fecdd3; color: #9f1239; }
+.co-alert.error   .co-alert-icon { background: #fda4af; color: #9f1239; }
+.co-alert.success { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #14532d; }
+.co-alert.success .co-alert-icon { background: #86efac; color: #14532d; }
+.co-alert.warning { background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; }
+.co-alert.warning .co-alert-icon { background: #fcd34d; color: #92400e; }
+.co-alert.info    { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1e40af; }
+.co-alert.info    .co-alert-icon { background: #93c5fd; color: #1e40af; }
+.co-alert-body { flex: 1; font-size: 0.8rem; }
+.co-alert-close { background: none; border: none; cursor: pointer; padding: 0; opacity: 0.45; font-size: 0.95rem; color: inherit; transition: opacity 0.15s; flex-shrink: 0; }
+.co-alert-close:hover { opacity: 1; }
 
 .co-sec-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #94a3b8; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 .co-sec-label::after { content: ''; flex: 1; height: 1.5px; background: #f1f5f9; }
@@ -119,23 +133,8 @@ const CSS = `
 .co-step { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 0.82rem; font-weight: 400; color: #475569; line-height: 1.6; }
 .co-step-n { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 1px; color: #fff; }
 
-.co-merchant {
-    display: flex; align-items: center; gap: 8px;
-    background: #fff; border: 1.5px solid;
-    border-radius: 12px; padding: 11px 14px;
-    margin: 6px 0 14px; font-size: 1rem; font-weight: 800;
-    user-select: none;
-}
-
-.co-copy-btn {
-    display: inline-flex; align-items: center; gap: 5px;
-    margin-left: auto; padding: 5px 11px;
-    border: 1.5px solid; border-radius: 8px;
-    font-size: 0.68rem; font-weight: 700;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    cursor: pointer; transition: all 0.18s;
-    background: transparent; flex-shrink: 0;
-}
+.co-merchant { display: flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid; border-radius: 12px; padding: 11px 14px; margin: 6px 0 14px; font-size: 1rem; font-weight: 800; user-select: none; }
+.co-copy-btn { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; padding: 5px 11px; border: 1.5px solid; border-radius: 8px; font-size: 0.68rem; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: all 0.18s; background: transparent; flex-shrink: 0; }
 .co-copy-btn:hover { opacity: 0.8; }
 .co-copy-btn.copied { background: #f0fdf4 !important; border-color: #bbf7d0 !important; color: #16a34a !important; }
 
@@ -202,40 +201,61 @@ const CodCardIcon = ({ size = 28 }) => (
     </svg>
 );
 
+// ── Inline Alert ──
+const Alert = ({ type, message, onDismiss }) => {
+    const icons = { error: '✕', success: '✓', warning: '!', info: 'i' };
+    return (
+        <div className={`co-alert ${type}`}>
+            <div className="co-alert-icon">{icons[type]}</div>
+            <div className="co-alert-body">{message}</div>
+            <button className="co-alert-close" onClick={onDismiss} type="button">✕</button>
+        </div>
+    );
+};
+
 export default function Checkout() {
     const { user, loading: authLoading } = useCurrentUser();
-    const { showToast } = useFloatingToast(); // Direct destructuring
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const currency = import.meta.env.VITE_CURRENCY_SYMBOL || '৳';
 
     const cartItems = useSelector(state => state.cart.items);
-    const products = useSelector(state => state.product.items);
+    const products  = useSelector(state => state.product.items);
 
-    const [addresses, setAddresses] = useState([]);
-    const [addrLoading, setAddrLoading] = useState(true);
-    const [selectedAddr, setSelectedAddr] = useState(null);
-    const [showNewForm, setShowNewForm] = useState(false);
-    const [newForm, setNewForm] = useState({
-        label: "Home", firstName: "", lastName: "",
-        phone: "", street: "", city: "", division: ""
-    });
-    const [formErrors, setFormErrors] = useState({});
+    const [addresses, setAddresses]         = useState([]);
+    const [addrLoading, setAddrLoading]     = useState(true);
+    const [selectedAddr, setSelectedAddr]   = useState(null);
+    const [showNewForm, setShowNewForm]     = useState(false);
+    const [newForm, setNewForm]             = useState({ label: "Home", firstName: "", lastName: "", phone: "", street: "", city: "", division: "" });
+    const [formErrors, setFormErrors]       = useState({});
 
     const [paymentMethod, setPaymentMethod] = useState("cod");
-    const [senderNumber, setSenderNumber] = useState("");
-    const [txId, setTxId] = useState("");
-    const [logoErrors, setLogoErrors] = useState({});
-    const [copiedNumber, setCopiedNumber] = useState(false);
-    const [paySettings, setPaySettings] = useState(null);
+    const [senderNumber, setSenderNumber]   = useState("");
+    const [txId, setTxId]                   = useState("");
+    const [logoErrors, setLogoErrors]       = useState({});
+    const [copiedNumber, setCopiedNumber]   = useState(false);
+    const [paySettings, setPaySettings]     = useState(null);
     const [paySettingsLoading, setPaySettingsLoading] = useState(true);
-    const [couponInput, setCouponInput] = useState("");
-    const [coupon, setCoupon] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [couponInput, setCouponInput]     = useState("");
+    const [coupon, setCoupon]               = useState(null);
+    const [loading, setLoading]             = useState(false);
+    const [alert, setAlert]                 = useState(null);
+    const [addrAlert, setAddrAlert]         = useState(null);
+    const [payAlert, setPayAlert]           = useState(null);
+    const [couponAlert, setCouponAlert]     = useState(null);
+    const [orderPlaced, setOrderPlaced]     = useState(false);
+
+    const showAlert       = (type, message) => setAlert({ type, message });
+    const clearAlert      = () => setAlert(null);
+    const showAddrAlert   = (type, message) => setAddrAlert({ type, message });
+    const clearAddrAlert  = () => setAddrAlert(null);
+    const showPayAlert    = (type, message) => setPayAlert({ type, message });
+    const clearPayAlert   = () => setPayAlert(null);
+    const showCouponAlert  = (type, message) => setCouponAlert({ type, message });
+    const clearCouponAlert = () => setCouponAlert(null);
 
     useEffect(() => {
         if (!user) return;
-        
         const unsub = onSnapshot(
             collection(db, "users", user.uid, "addresses"),
             snap => {
@@ -248,56 +268,45 @@ export default function Checkout() {
             },
             (err) => {
                 console.error("Error loading addresses:", err);
-                showToast("Failed to load addresses", "error");
+                showAlert("error", "Failed to load addresses.");
                 setAddrLoading(false);
             }
         );
         return () => unsub();
-    }, [user, selectedAddr, showToast]);
+    }, [user, selectedAddr]);
 
     useEffect(() => {
         const loadPaySettings = async () => {
             try {
                 const firstProduct = products.find(p => p.id === cartItems[0]?.id);
                 const storeId = firstProduct?.storeId;
-                
-                if (!storeId) {
-                    setPaySettingsLoading(false);
-                    return;
-                }
+                if (!storeId) { setPaySettingsLoading(false); return; }
 
                 const snap = await getDoc(doc(db, "stores", storeId, "settings", "payment"));
-                
                 if (snap.exists()) {
                     const data = snap.data();
                     setPaySettings(data);
-                    
-                    if (data.bkash?.enabled) setPaymentMethod("bkash");
-                    else if (data.nagad?.enabled) setPaymentMethod("nagad");
-                    else if (data.rocket?.enabled) setPaymentMethod("rocket");
+                    if (data.bkash?.enabled)         setPaymentMethod("bkash");
+                    else if (data.nagad?.enabled)    setPaymentMethod("nagad");
+                    else if (data.rocket?.enabled)   setPaymentMethod("rocket");
                     else if (data.cod?.enabled !== false) setPaymentMethod("cod");
                 } else {
                     setPaySettings(null);
                 }
             } catch (err) {
                 console.error("Error loading payment settings:", err);
-                showToast("Failed to load payment settings", "error");
+                showAlert("error", "Failed to load payment settings.");
             } finally {
                 setPaySettingsLoading(false);
             }
         };
-
-        if (cartItems.length > 0 && products.length > 0) {
-            loadPaySettings();
-        } else {
-            setPaySettingsLoading(false);
-        }
-    }, [cartItems, products, showToast]);
+        if (cartItems.length > 0 && products.length > 0) loadPaySettings();
+        else setPaySettingsLoading(false);
+    }, [cartItems, products]);
 
     if (authLoading || addrLoading || paySettingsLoading) return <Loading />;
 
-    if (cartItems.length === 0) {
-        showToast("Your cart is empty", "warning");
+    if (!orderPlaced && cartItems.length === 0) {
         navigate('/cart');
         return null;
     }
@@ -310,196 +319,103 @@ export default function Checkout() {
 
     const activeDivision = showNewForm ? newForm.division : selectedAddr?.division || "";
     const shippingFee = activeDivision.trim() ? getShippingFee(activeDivision) : null;
-    const subtotal = cartItems.reduce((sum, item) => {
+    const subtotal    = cartItems.reduce((sum, item) => {
         const p = products.find(x => x.id === item.id);
         return sum + (p?.price || 0) * item.qty;
     }, 0);
     const discountAmt = coupon ? (coupon.discount / 100 * subtotal) : 0;
-    const total = subtotal - discountAmt + (shippingFee || 0);
+    const total       = subtotal - discountAmt + (shippingFee || 0);
 
     const selectedPayment = PAYMENT_METHODS.find(m => m.id === paymentMethod) || PAYMENT_METHODS[3];
-    const isMobilePay = paymentMethod !== "cod";
-    const merchantNumber = paySettings?.[paymentMethod]?.number || "";
-    const hasNumber = merchantNumber.trim().length > 0;
+    const isMobilePay     = paymentMethod !== "cod";
+    const merchantNumber  = paySettings?.[paymentMethod]?.number || "";
+    const hasNumber       = merchantNumber.trim().length > 0;
 
     const handleCopyNumber = (e) => {
-        e?.preventDefault();
-        e?.stopPropagation();
-        
-        if (!merchantNumber) {
-            showToast("No merchant number available", "error");
-            return;
-        }
-
+        e?.preventDefault(); e?.stopPropagation();
+        if (!merchantNumber) { showAlert("error", "No merchant number available."); return; }
         try {
             navigator.clipboard.writeText(merchantNumber);
             setCopiedNumber(true);
-            showToast(`${selectedPayment.label} number copied!`, "success");
             setTimeout(() => setCopiedNumber(false), 2000);
         } catch (err) {
-            console.error("Copy failed:", err);
-            showToast("Failed to copy number", "error");
+            showAlert("error", "Failed to copy number.");
         }
     };
 
     const handleCoupon = async (e) => {
         e.preventDefault();
-        
-        if (!couponInput.trim()) {
-            showToast("Please enter a coupon code", "warning");
-            return;
-        }
-
-        if (!user) {
-            showToast("Please login to use coupons", "error");
-            navigate("/login");
-            return;
-        }
-
+        clearCouponAlert();
+        if (!couponInput.trim()) { showCouponAlert("warning", "Please enter a coupon code."); return; }
+        if (!user) { showAlert("error", "Please login to use coupons."); navigate("/login"); return; }
         try {
             const result = await validateCoupon(couponInput.trim().toUpperCase(), user.uid);
             setCoupon(result);
-            showToast(`🎉 ${result.discount}% discount applied!`, "success");
+            showCouponAlert("success", `${result.discount}% discount applied!`);
             setCouponInput("");
         } catch (err) {
-            console.error("Coupon validation error:", err);
-            showToast(err.message || "Invalid or expired coupon", "error");
+            showCouponAlert("error", err.message || "Invalid or expired coupon.");
         }
     };
 
-    const validatePhoneNumber = (phone) => {
-        const bdPhoneRegex = /^01[3-9]\d{8}$/;
-        return bdPhoneRegex.test(phone.replace(/\s/g, ''));
-    };
+    const validatePhone = (phone) => /^01[3-9]\d{8}$/.test(phone.replace(/\s/g, ''));
 
     const validateForm = () => {
+        clearAddrAlert();
+        clearPayAlert();
         const errors = {};
-
         if (showNewForm) {
-            if (!newForm.firstName?.trim()) {
-                errors.firstName = true;
-                showToast("Please enter first name", "error");
-            }
-            if (!newForm.phone?.trim()) {
-                errors.phone = true;
-                showToast("Please enter phone number", "error");
-            } else if (!validatePhoneNumber(newForm.phone)) {
-                errors.phone = true;
-                showToast("Please enter a valid phone number (e.g., 01712345678)", "error");
-            }
-            if (!newForm.street?.trim()) {
-                errors.street = true;
-                showToast("Please enter street address", "error");
-            }
-            if (!newForm.city?.trim()) {
-                errors.city = true;
-                showToast("Please enter city/area", "error");
-            }
-            if (!newForm.division?.trim()) {
-                errors.division = true;
-                showToast("Please select a division", "error");
-            }
+            if (!newForm.firstName?.trim())   { errors.firstName = true; showAddrAlert("error", "Please enter first name."); setFormErrors(errors); return false; }
+            if (!newForm.phone?.trim())        { errors.phone = true; showAddrAlert("error", "Please enter phone number."); setFormErrors(errors); return false; }
+            if (!validatePhone(newForm.phone)) { errors.phone = true; showAddrAlert("error", "Please enter a valid phone number (e.g. 01712345678)."); setFormErrors(errors); return false; }
+            if (!newForm.street?.trim())       { errors.street = true; showAddrAlert("error", "Please enter street address."); setFormErrors(errors); return false; }
+            if (!newForm.city?.trim())         { errors.city = true; showAddrAlert("error", "Please enter city/area."); setFormErrors(errors); return false; }
+            if (!newForm.division?.trim())     { errors.division = true; showAddrAlert("error", "Please select a division."); setFormErrors(errors); return false; }
         } else if (!selectedAddr) {
             errors.address = true;
-            showToast("Please select a delivery address", "error");
+            showAddrAlert("error", "Please select a delivery address.");
+            setFormErrors(errors);
+            return false;
         }
-
         setFormErrors(errors);
-        return Object.keys(errors).length === 0;
+        return true;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        clearAlert();
 
-        if (!user) {
-            showToast("Please login to place order", "error");
-            navigate("/login");
-            return;
-        }
-
-        if (cartItems.length === 0) {
-            showToast("Your cart is empty", "warning");
-            navigate("/cart");
-            return;
-        }
-
-        if (!validateForm()) {
-            return;
-        }
+        if (!user)               { showAlert("error", "Please login to place order."); navigate("/login"); return; }
+        if (cartItems.length===0) { showAlert("warning", "Your cart is empty."); navigate("/cart"); return; }
+        if (!validateForm())     return;
 
         if (isMobilePay) {
-            if (!senderNumber.trim()) {
-                showToast(`Please enter your ${selectedPayment.label} number`, "error");
-                return;
-            }
-            
-            if (!validatePhoneNumber(senderNumber)) {
-                showToast("Please enter a valid mobile number", "error");
-                return;
-            }
-
-            if (!txId.trim()) {
-                showToast("Please enter the Transaction ID", "error");
-                return;
-            }
-
-            if (txId.trim().length < 5) {
-                showToast("Transaction ID seems too short. Please verify", "warning");
-                return;
-            }
+            if (!senderNumber.trim())          { showPayAlert("error", `Please enter your ${selectedPayment.label} number.`); return; }
+            if (!validatePhone(senderNumber))  { showPayAlert("error", "Please enter a valid mobile number."); return; }
+            if (!txId.trim())                  { showPayAlert("error", "Please enter the Transaction ID."); return; }
+            if (txId.trim().length < 5)        { showPayAlert("warning", "Transaction ID seems too short. Please verify."); return; }
         }
 
         const address = selectedAddr && !showNewForm
-            ? {
-                firstName: selectedAddr.firstName,
-                lastName: selectedAddr.lastName,
-                phone: selectedAddr.phone,
-                street: selectedAddr.street,
-                city: selectedAddr.city,
-                division: selectedAddr.division,
-                email: user.email
-            }
-            : {
-                ...newForm,
-                email: user.email
-            };
+            ? { firstName: selectedAddr.firstName, lastName: selectedAddr.lastName, phone: selectedAddr.phone, street: selectedAddr.street, city: selectedAddr.city, division: selectedAddr.division, email: user.email }
+            : { ...newForm, email: user.email };
 
         const orderItems = cartItems.map(item => {
             const p = products.find(x => x.id === item.id);
-            return {
-                productId: item.id,
-                name: p?.name || "",
-                price: p?.price || 0,
-                image: p?.images?.[0] || p?.image || "",
-                quantity: item.qty,
-                storeId: p?.storeId || ""
-            };
+            return { productId: item.id, name: p?.name || "", price: p?.price || 0, image: p?.images?.[0] || p?.image || "", quantity: item.qty, storeId: p?.storeId || "" };
         }).filter(i => i.quantity > 0);
 
-        if (!orderItems.length) {
-            showToast("No valid items in cart", "error");
-            return;
-        }
+        if (!orderItems.length) { showAlert("error", "No valid items in cart."); return; }
 
         const storeId = products.find(p => p.id === cartItems[0]?.id)?.storeId || "";
-
-        if (!storeId) {
-            showToast("Store information missing. Please try again", "error");
-            return;
-        }
+        if (!storeId) { showAlert("error", "Store information missing. Please try again."); return; }
 
         setLoading(true);
-
         try {
             await addDoc(collection(db, "orders"), {
-                userId: user.uid,
-                userEmail: user.email,
-                storeId,
-                items: orderItems,
-                address,
-                addressData: address,
-                subtotal,
-                shippingFee: shippingFee || 0,
+                userId: user.uid, userEmail: user.email, storeId,
+                items: orderItems, address, addressData: address,
+                subtotal, shippingFee: shippingFee || 0,
                 discountAmount: discountAmt,
                 total: parseFloat(total.toFixed(2)),
                 status: "ORDER_PLACED",
@@ -507,22 +423,17 @@ export default function Checkout() {
                 payment: false,
                 coupon: coupon ? { code: coupon.code, discount: coupon.discount } : null,
                 isCouponUsed: !!coupon,
-                paymentDetails: isMobilePay ? {
-                    method: paymentMethod,
-                    senderNumber: senderNumber.trim(),
-                    txId: txId.trim(),
-                    merchantNumber
-                } : null,
+                paymentDetails: isMobilePay ? { method: paymentMethod, senderNumber: senderNumber.trim(), txId: txId.trim(), merchantNumber } : null,
                 createdAt: serverTimestamp(),
             });
-
+            setOrderPlaced(true);
             dispatch(clearCart());
-            showToast("Order placed successfully!", "success");
+            // Firestore-এও cart clear করো
+            if (user?.uid) dispatch(syncCartToFirestore({ userId: user.uid, items: [] }));
             navigate("/orders");
-
         } catch (err) {
             console.error("Order placement error:", err);
-            showToast("Failed to place order. Please try again", "error");
+            showAlert("error", "Failed to place order. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -530,13 +441,7 @@ export default function Checkout() {
 
     const nf = (key, val) => {
         setNewForm(p => ({ ...p, [key]: val }));
-        if (formErrors[key]) {
-            setFormErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[key];
-                return newErrors;
-            });
-        }
+        if (formErrors[key]) setFormErrors(prev => { const e = { ...prev }; delete e[key]; return e; });
     };
 
     return (
@@ -558,7 +463,12 @@ export default function Checkout() {
                     <div className="co-body">
 
                         <div>
+                            {/* Inline Alert — left column */}
+                            {alert && <Alert type={alert.type} message={alert.message} onDismiss={clearAlert} />}
+
                             <p className="co-sec-label">Delivery Address</p>
+
+                            {addrAlert && <Alert type={addrAlert.type} message={addrAlert.message} onDismiss={clearAddrAlert} />}
 
                             {addresses.length > 0 && (
                                 <div className="co-addr-list">
@@ -566,11 +476,7 @@ export default function Checkout() {
                                         <div
                                             key={addr.id}
                                             className={"co-addr-card" + (selectedAddr?.id === addr.id && !showNewForm ? " sel" : "")}
-                                            onClick={() => {
-                                                setSelectedAddr(addr);
-                                                setShowNewForm(false);
-                                                setFormErrors({});
-                                            }}
+                                            onClick={() => { setSelectedAddr(addr); setShowNewForm(false); setFormErrors({}); }}
                                         >
                                             <div className="co-addr-radio"><div className="co-addr-radio-dot" /></div>
                                             <div className="co-addr-info">
@@ -588,22 +494,14 @@ export default function Checkout() {
                                 </div>
                             )}
 
-                            <button
-                                type="button"
-                                className={"co-new-addr-btn" + (showNewForm ? " on" : "")}
-                                onClick={() => {
-                                    const next = !showNewForm;
-                                    setShowNewForm(next);
-                                    setFormErrors({});
-                                    if (!next) {
-                                        const def = addresses.find(a => a.isDefault) || addresses[0];
-                                        if (def) setSelectedAddr(def);
-                                    } else setSelectedAddr(null);
-                                }}
-                            >
-                                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                                </svg>
+                            <button type="button" className={"co-new-addr-btn" + (showNewForm ? " on" : "")} onClick={() => {
+                                const next = !showNewForm;
+                                setShowNewForm(next);
+                                setFormErrors({});
+                                if (!next) { const def = addresses.find(a => a.isDefault) || addresses[0]; if (def) setSelectedAddr(def); }
+                                else setSelectedAddr(null);
+                            }}>
+                                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                 {addresses.length > 0 ? "Use a different address" : "Add delivery address"}
                             </button>
 
@@ -612,57 +510,27 @@ export default function Checkout() {
                                     <div className="co-form-row">
                                         <div className="co-field">
                                             <svg className="co-field-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>
-                                            <input
-                                                className={"co-inp" + (formErrors.firstName ? " error" : "")}
-                                                placeholder="First Name *"
-                                                value={newForm.firstName}
-                                                onChange={e => nf("firstName", e.target.value)}
-                                            />
+                                            <input className={"co-inp" + (formErrors.firstName ? " error" : "")} placeholder="First Name *" value={newForm.firstName} onChange={e => nf("firstName", e.target.value)} />
                                         </div>
                                         <div className="co-field">
                                             <svg className="co-field-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>
-                                            <input
-                                                className="co-inp"
-                                                placeholder="Last Name"
-                                                value={newForm.lastName}
-                                                onChange={e => nf("lastName", e.target.value)}
-                                            />
+                                            <input className="co-inp" placeholder="Last Name" value={newForm.lastName} onChange={e => nf("lastName", e.target.value)} />
                                         </div>
                                     </div>
                                     <div className="co-field">
                                         <svg className="co-field-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.22 1.18 2 2 0 012.22 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.66-.66a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" /></svg>
-                                        <input
-                                            className={"co-inp" + (formErrors.phone ? " error" : "")}
-                                            type="tel"
-                                            placeholder="Phone Number *"
-                                            value={newForm.phone}
-                                            onChange={e => nf("phone", e.target.value)}
-                                        />
+                                        <input className={"co-inp" + (formErrors.phone ? " error" : "")} type="tel" placeholder="Phone Number *" value={newForm.phone} onChange={e => nf("phone", e.target.value)} />
                                     </div>
                                     <div className="co-field">
                                         <svg className="co-field-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
-                                        <input
-                                            className={"co-inp" + (formErrors.street ? " error" : "")}
-                                            placeholder="Street Address *"
-                                            value={newForm.street}
-                                            onChange={e => nf("street", e.target.value)}
-                                        />
+                                        <input className={"co-inp" + (formErrors.street ? " error" : "")} placeholder="Street Address *" value={newForm.street} onChange={e => nf("street", e.target.value)} />
                                     </div>
                                     <div className="co-field">
                                         <svg className="co-field-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></svg>
-                                        <input
-                                            className={"co-inp" + (formErrors.city ? " error" : "")}
-                                            placeholder="City / Area *"
-                                            value={newForm.city}
-                                            onChange={e => nf("city", e.target.value)}
-                                        />
+                                        <input className={"co-inp" + (formErrors.city ? " error" : "")} placeholder="City / Area *" value={newForm.city} onChange={e => nf("city", e.target.value)} />
                                     </div>
                                     <div className="co-sel-wrap">
-                                        <select
-                                            className={"co-sel" + (formErrors.division ? " error" : "")}
-                                            value={newForm.division}
-                                            onChange={e => nf("division", e.target.value)}
-                                        >
+                                        <select className={"co-sel" + (formErrors.division ? " error" : "")} value={newForm.division} onChange={e => nf("division", e.target.value)}>
                                             <option value="">— Select Division * —</option>
                                             {DIVISIONS.map(d => <option key={d}>{d}</option>)}
                                         </select>
@@ -678,6 +546,8 @@ export default function Checkout() {
 
                             <p className="co-sec-label" style={{ marginTop: 32 }}>Payment Method</p>
 
+                            {payAlert && <Alert type={payAlert.type} message={payAlert.message} onDismiss={clearPayAlert} />}
+
                             {availableMethods.length === 0 ? (
                                 <div className="co-no-number">
                                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
@@ -686,12 +556,7 @@ export default function Checkout() {
                             ) : (
                                 <div className="co-pay-grid">
                                     {availableMethods.map(m => (
-                                        <div
-                                            key={m.id}
-                                            className={"co-pay-card" + (paymentMethod === m.id ? " sel" : "")}
-                                            style={{ "--pc": m.color, "--pb": m.lightBg }}
-                                            onClick={() => { setPaymentMethod(m.id); setSenderNumber(""); setTxId(""); setCopiedNumber(false); }}
-                                        >
+                                        <div key={m.id} className={"co-pay-card" + (paymentMethod === m.id ? " sel" : "")} style={{ "--pc": m.color, "--pb": m.lightBg }} onClick={() => { setPaymentMethod(m.id); setSenderNumber(""); setTxId(""); setCopiedNumber(false); }}>
                                             <div className="co-pay-radio"><div className="co-pay-rdot" /></div>
                                             <div className="co-pay-logo">
                                                 {m.id === "cod" ? (
@@ -718,100 +583,48 @@ export default function Checkout() {
                                                 <span style={{ fontWeight: 800, fontSize: 12, color: selectedPayment.color }}>{selectedPayment.fallback}</span>
                                             )}
                                         </div>
-                                        <span className="co-pay-box-title" style={{ color: selectedPayment.color }}>
-                                            How to pay via {selectedPayment.label}
-                                        </span>
+                                        <span className="co-pay-box-title" style={{ color: selectedPayment.color }}>How to pay via {selectedPayment.label}</span>
                                     </div>
-
-                                    <div className="co-step">
-                                        <div className="co-step-n" style={{ background: selectedPayment.color }}>1</div>
-                                        <span>Open your <strong>{selectedPayment.label}</strong> app → tap <strong>Send Money</strong></span>
-                                    </div>
-                                    <div className="co-step">
-                                        <div className="co-step-n" style={{ background: selectedPayment.color }}>2</div>
-                                        <span>Send exactly <strong style={{ color: selectedPayment.color }}>{currency}{shippingFee !== null ? total.toFixed(0) : subtotal}</strong> to our number:</span>
-                                    </div>
-
+                                    <div className="co-step"><div className="co-step-n" style={{ background: selectedPayment.color }}>1</div><span>Open your <strong>{selectedPayment.label}</strong> app → tap <strong>Send Money</strong></span></div>
+                                    <div className="co-step"><div className="co-step-n" style={{ background: selectedPayment.color }}>2</div><span>Send exactly <strong style={{ color: selectedPayment.color }}>{currency}{shippingFee !== null ? total.toFixed(0) : subtotal}</strong> to our number:</span></div>
                                     {hasNumber ? (
                                         <div className="co-merchant" style={{ borderColor: selectedPayment.border, color: selectedPayment.color }}>
                                             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.22 1.18 2 2 0 012.22 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.66-.66a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" /></svg>
                                             <span style={{ flex: 1 }}>{merchantNumber}</span>
-                                            <button
-                                                type="button"
-                                                className={"co-copy-btn" + (copiedNumber ? " copied" : "")}
-                                                style={{
-                                                    borderColor: copiedNumber ? '#bbf7d0' : selectedPayment.border,
-                                                    color: copiedNumber ? '#16a34a' : selectedPayment.color,
-                                                }}
-                                                onClick={handleCopyNumber}
-                                            >
-                                                {copiedNumber ? (
-                                                    <>
-                                                        <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
-                                                        Copied!
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
-                                                        Copy
-                                                    </>
-                                                )}
+                                            <button type="button" className={"co-copy-btn" + (copiedNumber ? " copied" : "")} style={{ borderColor: copiedNumber ? '#bbf7d0' : selectedPayment.border, color: copiedNumber ? '#16a34a' : selectedPayment.color }} onClick={handleCopyNumber}>
+                                                {copiedNumber ? (<><svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>Copied!</>) : (<><svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>Copy</>)}
                                             </button>
                                         </div>
                                     ) : (
-                                        <div className="co-no-number">
-                                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                                            Payment number not set. Contact the store.
-                                        </div>
+                                        <div className="co-no-number"><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>Payment number not set. Contact the store.</div>
                                     )}
-
-                                    <div className="co-step">
-                                        <div className="co-step-n" style={{ background: selectedPayment.color }}>3</div>
-                                        <span>Copy the <strong>Transaction ID</strong> from your app and fill below</span>
-                                    </div>
-
+                                    <div className="co-step"><div className="co-step-n" style={{ background: selectedPayment.color }}>3</div><span>Copy the <strong>Transaction ID</strong> from your app and fill below</span></div>
                                     <div className="co-pay-inputs">
                                         <div>
                                             <label className="co-pay-input-label">Your {selectedPayment.label} Number *</label>
-                                            <input
-                                                className={"co-pay-input" + (senderNumber.length >= 11 ? " ok" : "")}
-                                                type="tel" placeholder="01XXXXXXXXX" maxLength={14}
-                                                value={senderNumber} onChange={e => setSenderNumber(e.target.value)}
-                                            />
+                                            <input className={"co-pay-input" + (/^01[3-9]\d{8}$/.test(senderNumber.replace(/\s/g,"")) ? " ok" : "")} type="tel" placeholder="01XXXXXXXXX" maxLength={14} value={senderNumber} onChange={e => setSenderNumber(e.target.value)} />
                                         </div>
                                         <div>
                                             <label className="co-pay-input-label">Transaction ID (TxID) *</label>
-                                            <input
-                                                className={"co-pay-input" + (txId.length >= 6 ? " ok" : "")}
-                                                placeholder={selectedPayment.placeholder}
-                                                value={txId} onChange={e => setTxId(e.target.value)}
-                                            />
+                                            <input className={"co-pay-input" + (txId.length >= 6 ? " ok" : "")} placeholder={selectedPayment.placeholder} value={txId} onChange={e => setTxId(e.target.value)} />
                                         </div>
                                     </div>
                                 </div>
                             )}
                         </div>
 
+                        {/* ── Right Panel ── */}
                         <div className="co-panel">
                             <p className="co-sec-label">Order Summary</p>
 
                             {!coupon ? (
-                                <div className="co-coupon-form">
-                                    <input
-                                        className="co-coupon-inp"
-                                        type="text"
-                                        placeholder="Coupon code"
-                                        value={couponInput}
-                                        onChange={e => setCouponInput(e.target.value)}
-                                    />
-                                    <button
-                                        type="button"
-                                        className="co-coupon-btn"
-                                        onClick={handleCoupon}
-                                    >
-                                        Apply
-                                    </button>
-                                </div>
+                                <>
+                                    {couponAlert && <Alert type={couponAlert.type} message={couponAlert.message} onDismiss={clearCouponAlert} />}
+                                    <div className="co-coupon-form">
+                                        <input className="co-coupon-inp" type="text" placeholder="Coupon code" value={couponInput} onChange={e => setCouponInput(e.target.value)} />
+                                        <button type="button" className="co-coupon-btn" onClick={handleCoupon}>Apply</button>
+                                    </div>
+                                </>
                             ) : (
                                 <div className="co-coupon-applied">
                                     <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" /></svg>
@@ -819,32 +632,20 @@ export default function Checkout() {
                                         <span className="co-coupon-code">{coupon.code?.toUpperCase()}</span>
                                         {coupon.description && <p className="co-coupon-desc">{coupon.description}</p>}
                                     </div>
-                                    <button type="button" className="co-coupon-remove" onClick={() => {
-                                        setCoupon(null);
-                                        showToast("Coupon removed", "info");
-                                    }}>
+                                    <button type="button" className="co-coupon-remove" onClick={() => { setCoupon(null); clearCouponAlert(); showCouponAlert("info", "Coupon removed."); }}>
                                         <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                                     </button>
                                 </div>
                             )}
 
-                            <div className="co-sum-row">
-                                <span className="co-sum-label">Subtotal</span>
-                                <span className="co-sum-val">{currency}{subtotal.toLocaleString()}</span>
-                            </div>
+                            <div className="co-sum-row"><span className="co-sum-label">Subtotal</span><span className="co-sum-val">{currency}{subtotal.toLocaleString()}</span></div>
                             <div className="co-sum-row">
                                 <span className="co-sum-label">Shipping</span>
-                                <span className={"co-sum-val" + (shippingFee !== null ? " green" : " pending")}>
-                                    {shippingFee !== null ? `${currency}${shippingFee}` : "Select address"}
-                                </span>
+                                <span className={"co-sum-val" + (shippingFee !== null ? " green" : " pending")}>{shippingFee !== null ? `${currency}${shippingFee}` : "Select address"}</span>
                             </div>
                             {coupon && (
-                                <div className="co-sum-row">
-                                    <span className="co-sum-label">Discount ({coupon.discount}%)</span>
-                                    <span className="co-sum-val red">-{currency}{discountAmt.toFixed(2)}</span>
-                                </div>
+                                <div className="co-sum-row"><span className="co-sum-label">Discount ({coupon.discount}%)</span><span className="co-sum-val red">-{currency}{discountAmt.toFixed(2)}</span></div>
                             )}
-
                             {shippingFee !== null && (
                                 <div className="co-ship-chip">
                                     <div>
@@ -854,7 +655,6 @@ export default function Checkout() {
                                     <div className="co-ship-chip-fee">৳{shippingFee}</div>
                                 </div>
                             )}
-
                             <div className="co-total-row">
                                 <span className="co-total-label">Total</span>
                                 <span className="co-total-val">{currency}{shippingFee !== null ? total.toFixed(0) : `${subtotal}+`}</span>
@@ -862,13 +662,9 @@ export default function Checkout() {
 
                             <div className="co-pay-badge" style={{ background: selectedPayment.lightBg, borderColor: selectedPayment.border }}>
                                 <div className="co-pay-badge-icon">
-                                    {selectedPayment.id === "cod" ? (
-                                        <CodCardIcon size={18} />
-                                    ) : !logoErrors[selectedPayment.id] ? (
+                                    {selectedPayment.id === "cod" ? <CodCardIcon size={18} /> : !logoErrors[selectedPayment.id] ? (
                                         <img src={selectedPayment.logo} alt={selectedPayment.label} style={{ width: 26, height: 26, objectFit: "contain" }} onError={() => setLogoErrors(p => ({ ...p, [selectedPayment.id]: true }))} />
-                                    ) : (
-                                        <span style={{ fontWeight: 800, fontSize: 9, color: selectedPayment.color }}>{selectedPayment.fallback}</span>
-                                    )}
+                                    ) : <span style={{ fontWeight: 800, fontSize: 9, color: selectedPayment.color }}>{selectedPayment.fallback}</span>}
                                 </div>
                                 <span className="co-pay-badge-name" style={{ color: selectedPayment.color }}>{selectedPayment.label}</span>
                                 {isMobilePay && txId && (

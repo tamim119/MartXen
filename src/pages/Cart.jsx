@@ -1,8 +1,7 @@
 import Counter from "../components/Counter";
 import { removeFromCart } from "../lib/features/cart/cartSlice";
-import { useFloatingToast } from "../components/FloatingToastProvider";
 import { Trash2Icon, ShoppingCartIcon, ArrowRightIcon, ShoppingBagIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -14,11 +13,6 @@ const CSS = `
     min-height: 100vh;
     padding: 0 24px;
     color: #0f172a;
-    animation: cart-fadeUp 0.55s cubic-bezier(0.4,0,0.2,1) both;
-}
-@keyframes cart-fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
 }
 .cart-inner { max-width: 1280px; margin: 0 auto; }
 
@@ -27,9 +21,7 @@ const CSS = `
     display: flex; align-items: center; justify-content: space-between;
     padding: 32px 0 24px; gap: 12px; flex-wrap: wrap;
 }
-.cart-title {
-    font-size: 1.5rem; font-weight: 500; color: #64748b; margin: 0;
-}
+.cart-title { font-size: 1.5rem; font-weight: 500; color: #64748b; margin: 0; }
 .cart-title span { color: #0f172a; font-weight: 800; }
 .cart-count {
     background: #f0fdf4; border: 1.5px solid #bbf7d0;
@@ -37,17 +29,34 @@ const CSS = `
     padding: 4px 12px; border-radius: 100px;
 }
 
-/* ── Layout ── */
-.cart-body {
-    display: flex; align-items: flex-start; gap: 28px; padding-bottom: 80px;
+/* ── Inline Alert ── */
+.cart-alert {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px; border-radius: 12px;
+    font-size: 0.825rem; font-weight: 500; line-height: 1.5;
+    margin-bottom: 18px;
 }
+.cart-alert-icon {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px; font-size: 0.65rem; font-weight: 800;
+}
+.cart-alert.error   { background: #fff1f2; border: 1.5px solid #fecdd3; color: #9f1239; }
+.cart-alert.error   .cart-alert-icon { background: #fda4af; color: #9f1239; }
+.cart-alert.success { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #14532d; }
+.cart-alert.success .cart-alert-icon { background: #86efac; color: #14532d; }
+.cart-alert.warning { background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; }
+.cart-alert.warning .cart-alert-icon { background: #fcd34d; color: #92400e; }
+.cart-alert-body { flex: 1; font-size: 0.8rem; }
+.cart-alert-close { background: none; border: none; cursor: pointer; padding: 0; opacity: 0.45; font-size: 0.95rem; color: inherit; transition: opacity 0.15s; flex-shrink: 0; }
+.cart-alert-close:hover { opacity: 1; }
+
+/* ── Layout ── */
+.cart-body { display: flex; align-items: flex-start; gap: 28px; padding-bottom: 80px; }
 @media (max-width: 1024px) { .cart-body { flex-direction: column; } }
 
 /* ── Table ── */
-.cart-table-wrap {
-    flex: 1; min-width: 0;
-    animation: cart-fadeUp 0.55s 0.08s cubic-bezier(0.4,0,0.2,1) both;
-}
+.cart-table-wrap { flex: 1; min-width: 0; }
 .cart-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; }
 .cart-table thead tr th {
     padding: 0 16px 14px;
@@ -58,12 +67,7 @@ const CSS = `
 .cart-table thead tr th:first-child { text-align: left; padding-left: 0; }
 .cart-table thead tr th:not(:first-child) { text-align: center; }
 
-.cart-row { animation: cart-fadeUp 0.4s cubic-bezier(0.4,0,0.2,1) both; transition: background 0.18s; }
-.cart-row:nth-child(1) { animation-delay: 0.08s; }
-.cart-row:nth-child(2) { animation-delay: 0.13s; }
-.cart-row:nth-child(3) { animation-delay: 0.18s; }
-.cart-row:nth-child(n+4) { animation-delay: 0.22s; }
-
+.cart-row { transition: background 0.18s; }
 .cart-row td { padding: 16px; border-bottom: 1.5px solid #f8fafc; vertical-align: middle; }
 .cart-row td:first-child { padding-left: 0; }
 .cart-row td:not(:first-child) { text-align: center; }
@@ -79,10 +83,10 @@ const CSS = `
 .cart-img-wrap img { width: 48px; height: 48px; object-fit: contain; mix-blend-mode: multiply; transition: transform 0.22s; }
 .cart-row:hover .cart-img-wrap img { transform: scale(1.07); }
 
-.cart-product-name { font-size: 0.875rem; font-weight: 600; color: #0f172a; margin: 0 0 3px; line-height: 1.35; }
-.cart-product-cat  { font-size: 0.72rem; color: #94a3b8; font-weight: 500; margin: 0 0 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+.cart-product-name  { font-size: 0.875rem; font-weight: 600; color: #0f172a; margin: 0 0 3px; line-height: 1.35; }
+.cart-product-cat   { font-size: 0.72rem; color: #94a3b8; font-weight: 500; margin: 0 0 5px; text-transform: uppercase; letter-spacing: 0.4px; }
 .cart-product-price { font-size: 0.875rem; font-weight: 700; color: #16a34a; margin: 0; }
-.cart-total-val { font-size: 0.9rem; font-weight: 700; color: #0f172a; }
+.cart-total-val     { font-size: 0.9rem; font-weight: 700; color: #0f172a; }
 
 .cart-del-btn {
     width: 36px; height: 36px; border-radius: 50%;
@@ -98,9 +102,7 @@ const CSS = `
 .cart-summary {
     width: 100%; max-width: 340px;
     background: #fff; border: 1.5px solid #f1f5f9;
-    border-radius: 22px; padding: 24px 22px;
-    flex-shrink: 0;
-    animation: cart-fadeUp 0.5s 0.15s cubic-bezier(0.4,0,0.2,1) both;
+    border-radius: 22px; padding: 24px 22px; flex-shrink: 0;
 }
 @media (max-width: 1024px) { .cart-summary { max-width: 100%; } }
 
@@ -119,8 +121,7 @@ const CSS = `
 
 .cart-ship-note {
     font-size: 0.75rem; color: #94a3b8; font-weight: 400;
-    line-height: 1.55; padding: 0 0 10px; border-bottom: 1.5px solid #f1f5f9;
-    margin-bottom: 2px;
+    line-height: 1.55; padding: 0 0 10px; border-bottom: 1.5px solid #f1f5f9; margin-bottom: 2px;
 }
 .cart-ship-note strong { color: #64748b; font-weight: 600; }
 
@@ -128,7 +129,7 @@ const CSS = `
     display: flex; justify-content: space-between; align-items: center;
     padding: 14px 0 18px;
 }
-.cart-total-label { font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; }
+.cart-total-label  { font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; }
 .cart-total-amount { font-size: 1.4rem; font-weight: 800; color: #0f172a; letter-spacing: -0.04em; }
 
 .cart-checkout-btn {
@@ -146,7 +147,7 @@ const CSS = `
 .cart-empty {
     font-family: 'Plus Jakarta Sans', sans-serif;
     min-height: 80vh; display: flex; align-items: center; justify-content: center;
-    padding: 24px; animation: cart-fadeUp 0.5s cubic-bezier(0.4,0,0.2,1) both;
+    padding: 24px;
 }
 .cart-empty-card {
     text-align: center; padding: 56px 48px;
@@ -161,7 +162,7 @@ const CSS = `
     margin: 0 auto 20px; color: #cbd5e1;
 }
 .cart-empty-title { font-size: 1.2rem; font-weight: 800; color: #0f172a; margin: 0 0 8px; letter-spacing: -0.3px; }
-.cart-empty-sub { font-size: 0.825rem; color: #94a3b8; margin: 0 0 28px; line-height: 1.65; font-weight: 400; }
+.cart-empty-sub   { font-size: 0.825rem; color: #94a3b8; margin: 0 0 28px; line-height: 1.65; font-weight: 400; }
 .cart-empty-btn {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 12px 28px; background: #16a34a; color: #fff;
@@ -169,7 +170,6 @@ const CSS = `
     font-family: 'Plus Jakarta Sans', sans-serif;
     border: none; border-radius: 100px; cursor: pointer;
     transition: all 0.22s; box-shadow: 0 4px 16px rgba(22,163,74,0.32);
-    text-decoration: none;
 }
 .cart-empty-btn:hover { background: #15803d; transform: translateY(-2px); box-shadow: 0 8px 22px rgba(22,163,74,0.4); }
 
@@ -181,75 +181,84 @@ const CSS = `
 }
 `;
 
+// ── Inline Alert ──
+const Alert = ({ type, message, onDismiss }) => {
+    const icons = { error: '✕', success: '✓', warning: '!' };
+    return (
+        <div className={`cart-alert ${type}`}>
+            <div className="cart-alert-icon">{icons[type]}</div>
+            <div className="cart-alert-body">{message}</div>
+            <button className="cart-alert-close" onClick={onDismiss} type="button">✕</button>
+        </div>
+    );
+};
+
 export default function Cart() {
     const currency = import.meta.env.VITE_CURRENCY_SYMBOL || "$";
     const { items: cartItems } = useSelector(state => state.cart);
     const products = useSelector(state => state.product.items);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { showToast } = useFloatingToast();
 
-    const [cartArray, setCartArray] = useState([]);
+    const [cartArray, setCartArray]   = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
+    const [alert, setAlert]           = useState(null);
+    const alertTimer = useRef(null);
 
-    const createCartArray = () => {
-        let total = 0;
-        const arr = [];
-        
-        for (const item of cartItems) {
-            const product = products.find(p => p.id === item.id);
-            if (product) {
-                arr.push({ ...product, quantity: item.qty });
-                total += product.price * item.qty;
-            } else {
-                // Product not found in store
-                console.warn(`Product ${item.id} not found in products list`);
-            }
-        }
-        
-        setCartArray(arr);
-        setTotalPrice(total);
+    // auto-dismiss alert after 3s
+    const showAlert = (type, message) => {
+        clearTimeout(alertTimer.current);
+        setAlert({ type, message });
+        alertTimer.current = setTimeout(() => setAlert(null), 3000);
     };
+    const clearAlert = () => { clearTimeout(alertTimer.current); setAlert(null); };
+
+    useEffect(() => () => clearTimeout(alertTimer.current), []);
 
     useEffect(() => {
+        if (cartItems.length === 0) {
+            setCartArray([]);
+            setTotalPrice(0);
+            return;
+        }
         if (products.length > 0) {
-            createCartArray();
+            let total = 0;
+            const arr = [];
+            for (const item of cartItems) {
+                const product = products.find(p => p.id === item.id);
+                if (product) {
+                    arr.push({ ...product, quantity: item.qty });
+                    total += product.price * item.qty;
+                }
+            }
+            setCartArray(arr);
+            setTotalPrice(total);
         }
     }, [cartItems, products]);
 
     const handleRemoveItem = (itemId, itemName) => {
         try {
             dispatch(removeFromCart(itemId));
-            showToast(`"${itemName}" removed from cart`, "success");
+            showAlert("success", `"${itemName}" removed from cart.`);
         } catch (err) {
-            console.error("Error removing item from cart:", err);
-            showToast("Failed to remove item. Please try again", "error");
+            console.error("Error removing item:", err);
+            showAlert("error", "Failed to remove item. Please try again.");
         }
     };
 
     const handleCheckout = () => {
-        if (cartArray.length === 0) {
-            showToast("Your cart is empty", "warning");
-            return;
-        }
-
-        if (totalPrice <= 0) {
-            showToast("Invalid cart total", "error");
-            return;
-        }
-
+        if (cartArray.length === 0) { showAlert("warning", "Your cart is empty."); return; }
+        if (totalPrice <= 0)        { showAlert("error", "Invalid cart total."); return; }
         navigate('/checkout');
     };
 
-    // ── Empty state ──
-    if (cartArray.length === 0) return (
+    // ── Empty state — cartItems (Redux) directly check করো, cartArray state না ──
+    if (cartItems.length === 0) return (
         <>
             <style>{CSS}</style>
             <div className="cart-empty">
                 <div className="cart-empty-card">
-                    <div className="cart-empty-icon">
-                        <ShoppingCartIcon size={32} />
-                    </div>
+                    <div className="cart-empty-icon"><ShoppingCartIcon size={32} /></div>
                     <p className="cart-empty-title">Your cart is empty</p>
                     <p className="cart-empty-sub">
                         Looks like you haven't added anything yet. Explore our products and find something you'll love.
@@ -268,13 +277,14 @@ export default function Cart() {
             <div className="cart-root">
                 <div className="cart-inner">
 
-                    {/* Header */}
                     <div className="cart-header">
                         <h1 className="cart-title">My <span>Cart</span></h1>
                         <span className="cart-count">
                             {cartArray.length} item{cartArray.length !== 1 ? 's' : ''}
                         </span>
                     </div>
+
+                    {alert && <Alert type={alert.type} message={alert.message} onDismiss={clearAlert} />}
 
                     <div className="cart-body">
 
@@ -295,12 +305,10 @@ export default function Cart() {
                                             <td>
                                                 <div className="cart-product-cell">
                                                     <div className="cart-img-wrap">
-                                                        <img 
-                                                            src={item.images?.[0] || item.image || ''} 
+                                                        <img
+                                                            src={item.images?.[0] || item.image || ''}
                                                             alt={item.name}
-                                                            onError={(e) => {
-                                                                e.target.src = '/placeholder.png';
-                                                            }}
+                                                            onError={e => { e.target.src = '/placeholder.png'; }}
                                                         />
                                                     </div>
                                                     <div>
@@ -332,7 +340,7 @@ export default function Cart() {
                             </table>
                         </div>
 
-                        {/* ── Summary card ── */}
+                        {/* ── Summary ── */}
                         <div className="cart-summary">
                             <p className="cart-sum-title">Order Summary</p>
 
@@ -350,10 +358,7 @@ export default function Cart() {
                                 <span className="cart-total-amount">{currency}{totalPrice.toLocaleString()}</span>
                             </div>
 
-                            <button
-                                className="cart-checkout-btn"
-                                onClick={handleCheckout}
-                            >
+                            <button className="cart-checkout-btn" onClick={handleCheckout}>
                                 <ShoppingBagIcon size={15} />
                                 Proceed to Checkout
                             </button>

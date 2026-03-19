@@ -8,6 +8,9 @@ import { fetchAddresses } from "./lib/features/address/addressSlice";
 // ✅ FloatingToastProvider import করুন
 import FloatingToastProvider from "./components/FloatingToastProvider";
  
+// ✅ PlusBanner import করুন
+import PlusBanner from "./components/plusBanner";
+ 
 import AdminLayout from "./components/admin/AdminLayout";
 import StoreLayout from "./components/store/StoreLayout";
  
@@ -46,6 +49,7 @@ import Footer  from "./components/Footer";
 import Banner  from "./components/Banner";
 import AdminPaymentSettings from "./pages/admin/PaymentSettings";
 import AdminBannerSettings from "./pages/admin/BannerSettings";
+import AdminPlusApprove from "./pages/admin/plusApprove";
  
 // ============================================================
 // ProtectedRoute Component
@@ -57,10 +61,11 @@ const ProtectedRoute = ({ children }) => {
 };
  
 // ============================================================
-// PublicLayout Component (with Banner, Navbar, Footer)
+// PublicLayout Component (with PlusBanner, Banner, Navbar, Footer)
 // ============================================================
 const PublicLayout = ({ children }) => (
     <div className="min-h-screen flex flex-col">
+        <PlusBanner />
         <Banner />
         <Navbar />
         <main className="flex-1">{children}</main>
@@ -202,6 +207,7 @@ export default function App() {
                         <Route path="pricing" element={<AdminPricing />} />
                         <Route path="payment-settings" element={<AdminPaymentSettings />} />
                         <Route path="banner-settings" element={<AdminBannerSettings />} />
+                        <Route path="plusApprove" element={<AdminPlusApprove />} />
                     </Route>
  
                     {/* ══════════════════════════════════════════════════ */}

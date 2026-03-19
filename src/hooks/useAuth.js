@@ -10,10 +10,12 @@ import {
   RecaptchaVerifier,
   sendEmailVerification,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  updateProfile
 } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { useState, useEffect } from "react";
+import { checkSubscriptionExpiry } from "../utils/plusMemberChecker";
 
 // Google Login
 export const loginWithGoogle = async () => {
@@ -28,10 +30,15 @@ export const loginWithFacebook = async () => {
 };
 
 // Email Register
-export const registerWithEmail = async (email, password) => {
+export const registerWithEmail = async (email, password, name) => {
   const result = await createUserWithEmailAndPassword(auth, email, password);
   await sendEmailVerification(result.user);
-  await saveUserToFirestore(result.user);
+  
+  // Update profile with name
+  await updateProfile(result.user, { displayName: name });
+  
+  // Save to Firestore with name
+  await saveUserToFirestore(result.user, name);
   return result.user;
 };
 
@@ -70,24 +77,52 @@ export const sendPhoneOTP = async (phoneNumber) => {
     formatted,
     window.recaptchaVerifier
   );
+  
+  // ✅ Store the name in confirmResult for later use
+  confirmResult.confirm = async (code, userName) => {
+    const result = await confirmResult.__proto__.confirm.call(confirmResult, code);
+    
+    // ✅ Save user with name after successful phone verification
+    if (result.user && userName) {
+      // Update Firebase Auth profile
+      await updateProfile(result.user, { displayName: userName });
+      
+      // Save to Firestore with name
+      await saveUserToFirestore(result.user, userName);
+    }
+    
+    return result;
+  };
+  
   return confirmResult;
 };
 
 // Firestore এ user save
-const saveUserToFirestore = async (user) => {
+const saveUserToFirestore = async (user, providedName = null) => {
   if (!user) return;
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
   
   if (!snap.exists()) {
+    // নতুন user তৈরি করা হচ্ছে
     await setDoc(userRef, {
       uid: user.uid,
       email: user.email || "",
-      name: user.displayName || "",
+      name: providedName || user.displayName || "",
       photo: user.photoURL || "",
+      phoneNumber: user.phoneNumber || "",
       role: "customer",
       createdAt: new Date(),
     });
+  } else {
+    // যদি user আগে থেকেই থাকে কিন্তু name নেই, তাহলে update করা হবে
+    const existingData = snap.data();
+    if (providedName && (!existingData.name || existingData.name.trim() === "")) {
+      await updateDoc(userRef, {
+        name: providedName,
+        displayName: providedName,
+      });
+    }
   }
 };
 
@@ -119,19 +154,37 @@ export const useCurrentUser = () => {
           if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
             
-            // ✅ Complete user object তৈরি করা হচ্ছে
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: userData.name || firebaseUser.displayName || "",
-              photoURL: userData.photo || firebaseUser.photoURL || "",
-              role: userData.role || "customer",
-              // Add other Firebase Auth properties
-              emailVerified: firebaseUser.emailVerified,
-              phoneNumber: firebaseUser.phoneNumber,
-              // Add Firestore data
-              ...userData,
-            });
+            // ✅ Check subscription expiry for Plus users
+            if (userData.role === "plus") {
+              await checkSubscriptionExpiry(firebaseUser.uid);
+              // Re-fetch user data after expiry check
+              const updatedSnap = await getDoc(userDocRef);
+              const updatedData = updatedSnap.exists() ? updatedSnap.data() : userData;
+              
+              // ✅ Complete user object তৈরি করা হচ্ছে
+              setUser({
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: updatedData.name || firebaseUser.displayName || "",
+                photoURL: updatedData.photo || firebaseUser.photoURL || "",
+                role: updatedData.role || "customer",
+                emailVerified: firebaseUser.emailVerified,
+                phoneNumber: firebaseUser.phoneNumber || updatedData.phoneNumber || "",
+                ...updatedData,
+              });
+            } else {
+              // ✅ Complete user object তৈরি করা হচ্ছে
+              setUser({
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: userData.name || firebaseUser.displayName || "",
+                photoURL: userData.photo || firebaseUser.photoURL || "",
+                role: userData.role || "customer",
+                emailVerified: firebaseUser.emailVerified,
+                phoneNumber: firebaseUser.phoneNumber || userData.phoneNumber || "",
+                ...userData,
+              });
+            }
           } else {
             // If user doesn't exist in Firestore, create it
             await saveUserToFirestore(firebaseUser);

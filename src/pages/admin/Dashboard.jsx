@@ -2,7 +2,7 @@ import Loading from "../../components/Loading";
 import OrdersAreaChart from "../../components/OrdersAreaChart";
 import {
     CircleDollarSignIcon, ShoppingBasketIcon,
-    StoreIcon, TagsIcon
+    StoreIcon, TagsIcon, TrendingUpIcon
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getAllOrders } from "../../lib/services/orderService";
@@ -15,140 +15,88 @@ const CSS = `
 
 .adash-root {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    animation: adash-fadeUp 0.5s cubic-bezier(0.4,0,0.2,1) both;
-}
-@keyframes adash-fadeUp {
-    from { opacity:0; transform:translateY(16px); }
-    to   { opacity:1; transform:translateY(0); }
+    margin-bottom: 80px;
 }
 
-/* ── Page title ── */
-.adash-title {
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: #64748b;
-    margin: 0 0 24px;
-    animation: adash-fadeUp 0.45s 0.04s cubic-bezier(0.4,0,0.2,1) both;
-}
-.adash-title span {
-    color: #0f172a;
-    font-weight: 800;
-}
+/* ── Header ── */
+.adash-header { margin-bottom: 28px; }
+.adash-title  { font-size: 1.5rem; font-weight: 500; color: #64748b; margin: 0 0 4px; }
+.adash-title span { color: #0f172a; font-weight: 800; }
+.adash-subtitle { font-size: 0.8rem; color: #94a3b8; margin: 0; font-weight: 400; }
 
 /* ── Stats grid ── */
 .adash-stats {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 14px;
-    margin-bottom: 28px;
-    animation: adash-fadeUp 0.5s 0.08s cubic-bezier(0.4,0,0.2,1) both;
+    margin-bottom: 20px;
 }
-@media (min-width: 640px) {
-    .adash-stats { grid-template-columns: repeat(2, 1fr); }
-}
-@media (min-width: 1024px) {
-    .adash-stats { grid-template-columns: repeat(4, 1fr); }
-}
+@media (max-width: 1024px) { .adash-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px)  { .adash-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
 
 .adash-stat-card {
     background: #fff;
     border: 1.5px solid #f1f5f9;
-    border-radius: 18px;
-    padding: 18px 20px;
+    border-radius: 20px;
+    padding: 20px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 12px;
-    transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.adash-stat-card::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: rgba(22,163,74,0.05);
+    pointer-events: none;
 }
 .adash-stat-card:hover {
-    border-color: #e2e8f0;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+    border-color: #bbf7d0;
+    box-shadow: 0 6px 24px rgba(22,163,74,0.08);
     transform: translateY(-2px);
 }
-.adash-stat-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
+
+.adash-stat-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.adash-stat-label { font-size: 0.68rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; margin: 0; }
+.adash-stat-icon {
+    width: 36px; height: 36px; border-radius: 11px;
+    background: #f0fdf4; border: 1.5px solid #bbf7d0;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: #16a34a;
 }
 .adash-stat-val {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #0f172a;
-    letter-spacing: -0.5px;
-    line-height: 1;
-}
-.adash-stat-icon {
-    width: 44px; height: 44px;
-    border-radius: 14px;
-    background: #f8fafc;
-    border: 1.5px solid #f1f5f9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: #94a3b8;
-    transition: background 0.18s, border-color 0.18s, color 0.18s;
-}
-.adash-stat-card:hover .adash-stat-icon {
-    background: #f0fdf4;
-    border-color: #bbf7d0;
-    color: #16a34a;
+    font-size: 1.65rem; font-weight: 800; color: #0f172a;
+    letter-spacing: -0.6px; line-height: 1; margin: 0;
 }
 
-/* ── Chart section ── */
-.adash-chart-section {
-    animation: adash-fadeUp 0.5s 0.14s cubic-bezier(0.4,0,0.2,1) both;
-}
-
-.adash-chart-wrap {
+/* ── Chart card ── */
+.adash-chart-card {
     background: #fff;
     border: 1.5px solid #f1f5f9;
     border-radius: 20px;
-    padding: 22px 22px 12px;
+    padding: 22px 22px 14px;
 }
+.adash-chart-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 8px; }
+.adash-chart-title { font-size: 0.9rem; font-weight: 700; color: #0f172a; margin: 0 0 3px; }
+.adash-chart-sub   { font-size: 0.72rem; color: #94a3b8; margin: 0; font-weight: 400; }
+.adash-chart-badge { display: inline-flex; align-items: center; gap: 5px; background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #16a34a; font-size: 0.68rem; font-weight: 700; padding: 4px 10px; border-radius: 100px; }
 
-.adash-chart-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 4px;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.adash-chart-label {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 2px;
-}
-.adash-chart-sublabel {
-    font-size: 0.72rem;
-    color: #94a3b8;
-    margin-bottom: 16px;
-}
-
-/* ── Responsive tweaks ── */
 @media (max-width: 480px) {
-    .adash-title { font-size: 1.2rem; margin-bottom: 18px; }
-    .adash-stat-card { padding: 14px 14px; border-radius: 14px; }
-    .adash-stat-val  { font-size: 1.2rem; }
-    .adash-stat-icon { width: 38px; height: 38px; border-radius: 11px; }
-    .adash-stats     { gap: 10px; margin-bottom: 20px; }
-    .adash-chart-wrap { padding: 16px 14px 8px; border-radius: 16px; }
+    .adash-stat-card { padding: 16px; border-radius: 16px; }
+    .adash-stat-val  { font-size: 1.35rem; }
+    .adash-chart-card { padding: 16px 14px 10px; }
 }
 `;
 
 export default function AdminDashboard() {
-    const [loading, setLoading] = useState(true);
-    const [dashboardData, setDashboardData] = useState({
-        products: 0, revenue: 0, orders: 0, stores: 0, allOrders: [],
-    });
-    const [currency, setCurrency] = useState("৳");
+    const [loading, setLoading]           = useState(true);
+    const [dashboardData, setDashboardData] = useState({ products: 0, revenue: 0, orders: 0, stores: 0, allOrders: [] });
+    const [currency, setCurrency]         = useState("৳");
 
     useEffect(() => {
         const load = async () => {
@@ -157,13 +105,7 @@ export default function AdminDashboard() {
                     getAllOrders(), getAllStores(), getAllProducts(), getPricing()
                 ]);
                 const revenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-                setDashboardData({
-                    products: products.length,
-                    revenue,
-                    orders: orders.length,
-                    stores: stores.length,
-                    allOrders: orders,
-                });
+                setDashboardData({ products: products.length, revenue, orders: orders.length, stores: stores.length, allOrders: orders });
                 setCurrency(pricing?.currencySymbol ?? "৳");
             } catch (err) { console.error(err); }
             finally { setLoading(false); }
@@ -171,43 +113,49 @@ export default function AdminDashboard() {
         load();
     }, []);
 
-    const statCards = [
-        { title: "Products", value: dashboardData.products,                      icon: ShoppingBasketIcon },
-        { title: "Revenue",  value: currency + dashboardData.revenue.toFixed(2), icon: CircleDollarSignIcon },
-        { title: "Orders",   value: dashboardData.orders,                        icon: TagsIcon },
-        { title: "Stores",   value: dashboardData.stores,                        icon: StoreIcon },
-    ];
-
     if (loading) return <Loading />;
+
+    const statCards = [
+        { title: "Total Revenue",  value: currency + dashboardData.revenue.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 2 }), icon: CircleDollarSignIcon },
+        { title: "Total Orders",   value: dashboardData.orders,   icon: TagsIcon },
+        { title: "Total Products", value: dashboardData.products, icon: ShoppingBasketIcon },
+        { title: "Active Stores",  value: dashboardData.stores,   icon: StoreIcon },
+    ];
 
     return (
         <>
             <style>{CSS}</style>
             <div className="adash-root">
 
-                {/* Title */}
-                <h1 className="adash-title">Admin <span>Dashboard</span></h1>
+                <div className="adash-header">
+                    <h1 className="adash-title">Admin <span>Dashboard</span></h1>
+                    <p className="adash-subtitle">Overview of your store performance</p>
+                </div>
 
-                {/* Stats */}
                 <div className="adash-stats">
                     {statCards.map((card, i) => (
                         <div key={i} className="adash-stat-card">
-                            <div>
+                            <div className="adash-stat-top">
                                 <p className="adash-stat-label">{card.title}</p>
-                                <p className="adash-stat-val">{card.value}</p>
+                                <div className="adash-stat-icon"><card.icon size={17} /></div>
                             </div>
-                            <div className="adash-stat-icon"><card.icon size={20} /></div>
+                            <p className="adash-stat-val">{card.value}</p>
                         </div>
                     ))}
                 </div>
 
-                {/* Chart */}
-                <div className="adash-chart-section">
-                    <div className="adash-chart-wrap">
-                        <p className="adash-chart-label">Orders Overview</p>
-                        <p className="adash-chart-sublabel">Revenue trend over time</p>
-                        <OrdersAreaChart allOrders={dashboardData.allOrders} />
+                <div className="adash-chart-card">
+                    <div className="adash-chart-head">
+                        <div>
+                            <p className="adash-chart-title">Orders Overview</p>
+                            <p className="adash-chart-sub">Daily order volume over time</p>
+                        </div>
+                        <span className="adash-chart-badge">
+                            <TrendingUpIcon size={11} />
+                            {dashboardData.orders} total orders
+                        </span>
                     </div>
+                    <OrdersAreaChart allOrders={dashboardData.allOrders} />
                 </div>
 
             </div>

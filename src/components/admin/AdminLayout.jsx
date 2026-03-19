@@ -35,44 +35,18 @@ const CSS = `
     justify-content: center;
     padding: 24px;
     background: #f8fafc;
-    animation: al-fadeUp 0.5s cubic-bezier(0.4,0,0.2,1) both;
-}
-@keyframes al-fadeUp {
-    from { opacity:0; transform:translateY(20px); }
-    to   { opacity:1; transform:translateY(0); }
 }
 .al-unauth-card {
-    text-align: center;
-    padding: 52px 44px;
-    background: #fff;
-    border: 1.5px solid #f1f5f9;
-    border-radius: 28px;
+    text-align: center; padding: 52px 44px; background: #fff;
+    border: 1.5px solid #f1f5f9; border-radius: 28px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.05);
-    max-width: 400px;
-    width: 100%;
+    max-width: 400px; width: 100%;
 }
-.al-unauth-icon {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    background: #fef2f2;
-    border: 1.5px solid #fecaca;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px;
-    color: #ef4444;
-}
+.al-unauth-icon { width: 72px; height: 72px; border-radius: 50%; background: #fef2f2; border: 1.5px solid #fecaca; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #ef4444; }
 .al-unauth-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0 0 8px; letter-spacing: -0.3px; }
 .al-unauth-sub { font-size: 0.825rem; color: #94a3b8; margin: 0 0 28px; line-height: 1.65; font-weight: 400; }
-.al-unauth-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 12px 28px; background: #0f172a; color: #fff;
-    font-size: 0.875rem; font-weight: 700;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    border: none; border-radius: 100px; cursor: pointer;
-    text-decoration: none; transition: all 0.22s;
-    box-shadow: 0 4px 14px rgba(15,23,42,0.18);
-}
-.al-unauth-btn:hover { background: #1e293b; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,23,42,0.25); }
-.al-unauth-btn:active { transform: scale(0.97); }
+.al-unauth-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; background: #0f172a; color: #fff; font-size: 0.875rem; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; border: none; border-radius: 100px; cursor: pointer; text-decoration: none; transition: all 0.22s; box-shadow: 0 4px 14px rgba(15,23,42,0.18); }
+.al-unauth-btn:hover { background: #1e293b; transform: translateY(-2px); }
 `;
 
 const AdminLayout = () => {
@@ -117,9 +91,7 @@ const AdminLayout = () => {
         <>
             <style>{CSS}</style>
             <div className="al-root">
-                <AdminNavbar
-                    onMenuToggle={() => setMobileNavOpen(o => !o)}
-                />
+                <AdminNavbar onMenuToggle={() => setMobileNavOpen(o => !o)} />
                 <div className="al-body">
                     <AdminSidebar
                         mobileOpen={mobileNavOpen}
