@@ -5,13 +5,12 @@ import {
   signInWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
-  FacebookAuthProvider,
-  signInWithPhoneNumber,
-  RecaptchaVerifier,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  fetchSignInMethodsForEmail,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { useState, useEffect } from "react";
@@ -23,21 +22,11 @@ export const loginWithGoogle = async () => {
   await signInWithRedirect(auth, provider);
 };
 
-// Facebook Login
-export const loginWithFacebook = async () => {
-  const provider = new FacebookAuthProvider();
-  await signInWithRedirect(auth, provider);
-};
-
 // Email Register
 export const registerWithEmail = async (email, password, name) => {
   const result = await createUserWithEmailAndPassword(auth, email, password);
   await sendEmailVerification(result.user);
-  
-  // Update profile with name
   await updateProfile(result.user, { displayName: name });
-  
-  // Save to Firestore with name
   await saveUserToFirestore(result.user, name);
   return result.user;
 };
@@ -48,53 +37,16 @@ export const loginWithEmail = async (email, password) => {
   return result.user;
 };
 
-// Phone OTP — reCAPTCHA setup
-export const setupRecaptcha = (elementId) => {
-  if (window.recaptchaVerifier) {
-    window.recaptchaVerifier.clear();
-    window.recaptchaVerifier = null;
+// ✅ Forgot Password — Firebase Auth দিয়ে email registered কিনা check করে
+export const resetPassword = async (email) => {
+  // fetchSignInMethodsForEmail দিয়ে check করো email registered কিনা
+  const methods = await fetchSignInMethodsForEmail(auth, email);
+  if (!methods || methods.length === 0) {
+    const err = new Error("No account found with this email.");
+    err.code = "auth/user-not-found";
+    throw err;
   }
-  window.recaptchaVerifier = new RecaptchaVerifier(
-    auth,
-    elementId,
-    {
-      size: "invisible",
-      callback: () => {},
-      "expired-callback": () => {
-        window.recaptchaVerifier = null;
-      },
-    }
-  );
-};
-
-// Phone OTP — send
-export const sendPhoneOTP = async (phoneNumber) => {
-  const formatted = phoneNumber.startsWith("+")
-    ? phoneNumber
-    : "+88" + phoneNumber;
-  const confirmResult = await signInWithPhoneNumber(
-    auth,
-    formatted,
-    window.recaptchaVerifier
-  );
-  
-  // ✅ Store the name in confirmResult for later use
-  confirmResult.confirm = async (code, userName) => {
-    const result = await confirmResult.__proto__.confirm.call(confirmResult, code);
-    
-    // ✅ Save user with name after successful phone verification
-    if (result.user && userName) {
-      // Update Firebase Auth profile
-      await updateProfile(result.user, { displayName: userName });
-      
-      // Save to Firestore with name
-      await saveUserToFirestore(result.user, userName);
-    }
-    
-    return result;
-  };
-  
-  return confirmResult;
+  await sendPasswordResetEmail(auth, email);
 };
 
 // Firestore এ user save
@@ -102,20 +54,17 @@ const saveUserToFirestore = async (user, providedName = null) => {
   if (!user) return;
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
-  
+
   if (!snap.exists()) {
-    // নতুন user তৈরি করা হচ্ছে
     await setDoc(userRef, {
       uid: user.uid,
       email: user.email || "",
       name: providedName || user.displayName || "",
       photo: user.photoURL || "",
-      phoneNumber: user.phoneNumber || "",
       role: "customer",
       createdAt: new Date(),
     });
   } else {
-    // যদি user আগে থেকেই থাকে কিন্তু name নেই, তাহলে update করা হবে
     const existingData = snap.data();
     if (providedName && (!existingData.name || existingData.name.trim() === "")) {
       await updateDoc(userRef, {
@@ -126,13 +75,12 @@ const saveUserToFirestore = async (user, providedName = null) => {
   }
 };
 
-// ✅ Auth state hook - FIXED VERSION
+// Auth state hook
 export const useCurrentUser = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Handle redirect result first
     getRedirectResult(auth)
       .then(async (result) => {
         if (result?.user) {
@@ -143,25 +91,20 @@ export const useCurrentUser = () => {
         console.error("Redirect error:", err.message);
       });
 
-    // Listen to auth state changes
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // ✅ Firestore থেকে user data fetch করা হচ্ছে
           const userDocRef = doc(db, "users", firebaseUser.uid);
           const userDocSnap = await getDoc(userDocRef);
-          
+
           if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
-            
-            // ✅ Check subscription expiry for Plus users
+
             if (userData.role === "plus") {
               await checkSubscriptionExpiry(firebaseUser.uid);
-              // Re-fetch user data after expiry check
               const updatedSnap = await getDoc(userDocRef);
               const updatedData = updatedSnap.exists() ? updatedSnap.data() : userData;
-              
-              // ✅ Complete user object তৈরি করা হচ্ছে
+
               setUser({
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
@@ -169,11 +112,9 @@ export const useCurrentUser = () => {
                 photoURL: updatedData.photo || firebaseUser.photoURL || "",
                 role: updatedData.role || "customer",
                 emailVerified: firebaseUser.emailVerified,
-                phoneNumber: firebaseUser.phoneNumber || updatedData.phoneNumber || "",
                 ...updatedData,
               });
             } else {
-              // ✅ Complete user object তৈরি করা হচ্ছে
               setUser({
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
@@ -181,14 +122,11 @@ export const useCurrentUser = () => {
                 photoURL: userData.photo || firebaseUser.photoURL || "",
                 role: userData.role || "customer",
                 emailVerified: firebaseUser.emailVerified,
-                phoneNumber: firebaseUser.phoneNumber || userData.phoneNumber || "",
                 ...userData,
               });
             }
           } else {
-            // If user doesn't exist in Firestore, create it
             await saveUserToFirestore(firebaseUser);
-            
             setUser({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
@@ -196,12 +134,10 @@ export const useCurrentUser = () => {
               photoURL: firebaseUser.photoURL || "",
               role: "customer",
               emailVerified: firebaseUser.emailVerified,
-              phoneNumber: firebaseUser.phoneNumber,
             });
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
-          // Fallback to Firebase Auth data only
           setUser({
             uid: firebaseUser.uid,
             email: firebaseUser.email,
@@ -209,7 +145,6 @@ export const useCurrentUser = () => {
             photoURL: firebaseUser.photoURL || "",
             role: "customer",
             emailVerified: firebaseUser.emailVerified,
-            phoneNumber: firebaseUser.phoneNumber,
           });
         }
       } else {

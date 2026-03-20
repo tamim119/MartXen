@@ -7,15 +7,48 @@ import {
 } from "firebase/firestore";
 import { uploadProductImage } from "../../supabase";
 
-// Timestamp convert helper
-const serializeProduct = (id, data) => ({
-  id,
-  ...data,
-  createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
-  updatedAt: data.updatedAt?.toDate?.()?.toISOString() || null,
-});
+// ✅ Firestore Timestamp যেকোনো জায়গায় থাকলে serialize করো
+const serializeValue = (val) => {
+  if (val === null || val === undefined) return val;
+  // Firestore Timestamp
+  if (val?.toDate && typeof val.toDate === "function") {
+    return val.toDate().toISOString();
+  }
+  // Array — recursively serialize
+  if (Array.isArray(val)) {
+    return val.map(serializeValue);
+  }
+  // Object — recursively serialize
+  if (typeof val === "object") {
+    const result = {};
+    for (const key of Object.keys(val)) {
+      result[key] = serializeValue(val[key]);
+    }
+    return result;
+  }
+  return val;
+};
 
-// সব products fetch করুন
+// ✅ Product serialize — rating এর ভেতরের Timestamp ও fix হবে
+const serializeProduct = (id, data) => {
+  const serialized = serializeValue(data);
+  return { id, ...serialized };
+};
+
+// ✅ Active store IDs বের করার helper
+const getActiveStoreIds = async () => {
+  const snap = await getDocs(collection(db, "stores"));
+  const activeIds = new Set();
+  snap.docs.forEach(d => {
+    const data = d.data();
+    if (data.isActive !== false) {
+      activeIds.add(d.id);
+    }
+  });
+  return activeIds;
+};
+
+// সব products fetch করুন (paused store এর products বাদ পড়বে)
 export const fetchProducts = createAsyncThunk(
   "product/fetchAll",
   async (filters = {}) => {
@@ -26,8 +59,18 @@ export const fetchProducts = createAsyncThunk(
     if (filters.limit) {
       q = query(q, orderBy("createdAt", "desc"), limit(filters.limit));
     }
-    const snap = await getDocs(q);
-    return snap.docs.map(d => serializeProduct(d.id, d.data()));
+
+    const [snap, activeStoreIds] = await Promise.all([
+      getDocs(q),
+      getActiveStoreIds(),
+    ]);
+
+    return snap.docs
+      .map(d => serializeProduct(d.id, d.data()))
+      .filter(product => {
+        if (!product.storeId) return true;
+        return activeStoreIds.has(product.storeId);
+      });
   }
 );
 
@@ -35,12 +78,24 @@ export const fetchProducts = createAsyncThunk(
 export const fetchProductById = createAsyncThunk(
   "product/fetchById",
   async (productId) => {
-    const snap = await getDoc(doc(db, "products", productId));
-    return snap.exists() ? serializeProduct(snap.id, snap.data()) : null;
+    const [snap, activeStoreIds] = await Promise.all([
+      getDoc(doc(db, "products", productId)),
+      getActiveStoreIds(),
+    ]);
+
+    if (!snap.exists()) return null;
+
+    const product = serializeProduct(snap.id, snap.data());
+
+    if (product.storeId && !activeStoreIds.has(product.storeId)) {
+      return null;
+    }
+
+    return product;
   }
 );
 
-// Admin: Product add করুন (Supabase image + Firestore data)
+// Admin: Product add করুন
 export const addProduct = createAsyncThunk(
   "product/add",
   async ({ productData, imageFile }) => {
@@ -111,40 +166,30 @@ const productSlice = createSlice({
     setSelected: (state, action) => {
       state.selected = action.payload;
     },
-    // ✅ FIX 1: এই action টা status "idle" তে reset করে
-    // যাতে fetchProducts আবার fresh data নিয়ে আসতে পারে
     resetStatus: (state) => {
       state.status = "idle";
     },
-    // ✅ FIX 1b: Review submit হলে local state এ সাথে সাথে update করো
-    // এতে re-fetch এর আগেও UI তে review দেখাবে
     updateProductReviewLocally: (state, action) => {
       const { productId, review } = action.payload;
       const idx = state.items.findIndex(p => p.id === productId);
       if (idx !== -1) {
+        // ✅ review এর Timestamp ও serialize করো
+        const safeReview = serializeValue(review);
         const existing = state.items[idx].rating || [];
         state.items[idx] = {
           ...state.items[idx],
-          rating: [review, ...existing],
+          rating: [safeReview, ...existing],
         };
       }
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchProducts.pending, (s) => { s.status = "loading"; })
-      .addCase(fetchProducts.fulfilled, (s, a) => {
-        s.items = a.payload; s.status = "succeeded";
-      })
-      .addCase(fetchProducts.rejected, (s, a) => {
-        s.error = a.error.message; s.status = "failed";
-      })
-      .addCase(fetchProductById.fulfilled, (s, a) => {
-        s.selected = a.payload;
-      })
-      .addCase(addProduct.fulfilled, (s, a) => {
-        s.items.unshift(a.payload);
-      })
+      .addCase(fetchProducts.pending,   (s) => { s.status = "loading"; })
+      .addCase(fetchProducts.fulfilled, (s, a) => { s.items = a.payload; s.status = "succeeded"; })
+      .addCase(fetchProducts.rejected,  (s, a) => { s.error = a.error.message; s.status = "failed"; })
+      .addCase(fetchProductById.fulfilled, (s, a) => { s.selected = a.payload; })
+      .addCase(addProduct.fulfilled,    (s, a) => { s.items.unshift(a.payload); })
       .addCase(updateProduct.fulfilled, (s, a) => {
         const idx = s.items.findIndex(p => p.id === a.payload.id);
         if (idx !== -1) s.items[idx] = a.payload;
@@ -158,16 +203,14 @@ const productSlice = createSlice({
 export const { setFilter, setSelected, resetStatus, updateProductReviewLocally } = productSlice.actions;
 export default productSlice.reducer;
 
-// Selectors
-export const selectAllProducts = (s) => s.product.items;
+export const selectAllProducts     = (s) => s.product.items;
 export const selectSelectedProduct = (s) => s.product.selected;
-export const selectProductStatus = (s) => s.product.status;
+export const selectProductStatus   = (s) => s.product.status;
 export const selectFilteredProducts = (s) => {
   const { items, filters } = s.product;
   return items.filter(p => {
-    const matchCat = !filters.category || p.category === filters.category;
-    const matchSearch = !filters.search ||
-      p.name?.toLowerCase().includes(filters.search.toLowerCase());
+    const matchCat    = !filters.category || p.category === filters.category;
+    const matchSearch = !filters.search   || p.name?.toLowerCase().includes(filters.search.toLowerCase());
     return matchCat && matchSearch;
   });
 };

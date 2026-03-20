@@ -127,8 +127,8 @@ const Contact = () => {
                             </div>
                             <p className="ct-card-label">Phone &amp; Email</p>
                             <div className="ct-card-text">
-                                <a href="tel:+8801700000000" className="ct-card-link">+880 1700-000000</a>
-                                <a href="mailto:support@dynamicxmart.com" className="ct-card-link">support@dynamicxmart.com</a>
+                                <a href="tel:+8801700000000" className="ct-card-link">+880 1796-972098</a>
+                                <a href="mailto:support@dynamicxmart.com" className="ct-card-link">support@martxen.com</a>
                                 <span style={{ marginTop: 8, display: "block" }}>Response within 24 business hours.</span>
                             </div>
                         </div>
@@ -169,11 +169,11 @@ const Contact = () => {
                             <p className="ct-banner-tag">100% Online</p>
                             <p className="ct-banner-title">Shop with Confidence</p>
                             <p className="ct-banner-text">
-                                DynamicxMart is entirely online — shop from the comfort of your home, anytime. Secure payments, fast dispatch, and real-time order tracking make every purchase effortless.
+                                martxen is entirely online — shop from the comfort of your home, anytime. Secure payments, fast dispatch, and real-time order tracking make every purchase effortless.
                             </p>
                         </div>
                         <a
-                            href="https://dynamicxmart.com"
+                            href="https://martxen.com"
                             target="_blank"
                             rel="noreferrer"
                             className="ct-banner-btn"
@@ -186,7 +186,7 @@ const Contact = () => {
                     <div ref={bottomRef} className={"ct-bottom" + (bottomVisible ? " visible" : "")}>
                         <div className="ct-bottom-cell">
                             <p className="ct-bottom-label">Online Store</p>
-                            <a href="https://dynamicxmart.com" target="_blank" rel="noreferrer" className="ct-bottom-link">
+                            <a href="https://martxen.com" target="_blank" rel="noreferrer" className="ct-bottom-link">
                                 dynamicxmart.com
                             </a>
                             <p className="ct-bottom-text">

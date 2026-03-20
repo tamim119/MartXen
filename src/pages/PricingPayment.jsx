@@ -137,14 +137,13 @@ export default function PricingPayment() {
         rocket: { enabled: false, number: "" },
     });
 
-    // ── Screen states ──
-    const [screen,         setScreen]         = useState(null);
-    const [requestStatus,  setRequestStatus]  = useState(null);
-    const [checking,       setChecking]       = useState(true);
+    const [screen,        setScreen]        = useState(null);
+    const [requestStatus, setRequestStatus] = useState(null);
+    const [checking,      setChecking]      = useState(true);
 
-    const showAlert    = (type, message) => setAlert({ type, message });
-    const clearAlert   = () => setAlert(null);
-    const showPayAlert = (type, message) => setPayAlert({ type, message });
+    const showAlert     = (type, message) => setAlert({ type, message });
+    const clearAlert    = () => setAlert(null);
+    const showPayAlert  = (type, message) => setPayAlert({ type, message });
     const clearPayAlert = () => setPayAlert(null);
 
     useEffect(() => {
@@ -159,7 +158,6 @@ export default function PricingPayment() {
         if (!plan || !amount) navigate("/pricing");
     }, [plan, amount, navigate]);
 
-    // Payment settings
     useEffect(() => {
         const unsub = onSnapshot(
             doc(db, "settings", "adminPayment"),
@@ -185,7 +183,6 @@ export default function PricingPayment() {
         return () => unsub();
     }, []);
 
-    // ── Main logic ──
     useEffect(() => {
         if (authLoading) return;
 
@@ -282,14 +279,18 @@ export default function PricingPayment() {
                               (!!(currentUser?.role !== "plus" && currentUser?.plusActivatedAt));
 
             await addDoc(collection(db, "plusRequests"), {
-                userId: user.uid, userEmail: user.email,
-                userName: user.displayName || "",
+                userId:          user.uid,
+                userEmail:       user.email,
+                userName:        user.displayName || "",
                 plan, billing, amount, currency,
-                paymentMethod: selected,
-                txId: txId.trim(), senderNumber: senderNumber.trim(),
-                merchantNumber, status: "pending",
-                isRenewal: isRenewal,
-                createdAt: new Date().toISOString(),
+                paymentMethod:   selected,
+                txId:            txId.trim(),
+                senderNumber:    senderNumber.trim(),
+                merchantNumber,
+                status:          "pending",
+                isRenewal:       isRenewal,
+                previousBilling: isRenewal ? (currentUser?.plusBilling || "monthly") : null,
+                createdAt:       new Date().toISOString(),
             });
             setRequestStatus("pending");
             setScreen("review");
@@ -303,59 +304,59 @@ export default function PricingPayment() {
 
     if (checking || authLoading) return null;
 
-    // ════════════════════════════════════════════════
     // ── REVIEW SCREEN ──
-    // ════════════════════════════════════════════════
     if (screen === "review") {
         const isApproved = requestStatus === "approved";
         const isRejected = requestStatus === "rejected";
-        const isPending  = requestStatus === "pending";
 
-        // Renewal/Upgrade/Downgrade detection
         const isRenewalUser = currentUser?.plusExpired === true ||
                               (!!(currentUser?.role !== "plus" && currentUser?.plusActivatedAt));
-        
-        const prevBilling = currentUser?.plusBilling || "monthly";
-        const isSamePlan = !billing || billing === prevBilling;
-        const isUpgrade = isRenewalUser && !isSamePlan && prevBilling === "monthly" && billing === "yearly";
-        const isDowngrade = isRenewalUser && !isSamePlan && prevBilling === "yearly" && billing === "monthly";
 
-        // Color config
+        const prevBilling = currentUser?.plusBilling || "monthly";
+        const isSamePlan  = !billing || billing === prevBilling;
+        const isUpgrade   = isRenewalUser && !isSamePlan && prevBilling === "monthly" && billing === "yearly";
+        const isDowngrade = isRenewalUser && !isSamePlan && prevBilling === "yearly"  && billing === "monthly";
+
         const cfg = isApproved
             ? { bg: '#f0fdf4', border: '#bbf7d0', iconBg: '#f0fdf4', iconStroke: '#16a34a', badgeBg: '#f0fdf4', badgeBorder: '#bbf7d0', badgeColor: '#14532d', dotColor: '#16a34a', infoBg: '#f0fdf4', infoBorder: '#bbf7d0', infoLabel: '#16a34a', numBg: '#f0fdf4', numBorder: '#bbf7d0', numColor: '#16a34a' }
             : isRejected
             ? { bg: '#fff1f2', border: '#fecdd3', iconBg: '#fff1f2', iconStroke: '#dc2626', badgeBg: '#fff1f2', badgeBorder: '#fecdd3', badgeColor: '#9f1239', dotColor: '#dc2626', infoBg: '#fff1f2', infoBorder: '#fecdd3', infoLabel: '#dc2626', numBg: '#fff1f2', numBorder: '#fecdd3', numColor: '#dc2626' }
             : { bg: '#fefce8', border: '#fde68a', iconBg: '#fefce8', iconStroke: '#d97706', badgeBg: '#fef9c3', badgeBorder: '#fde68a', badgeColor: '#854d0e', dotColor: '#f59e0b', infoBg: '#f8fafc', infoBorder: '#f1f5f9', infoLabel: '#94a3b8', numBg: '#f0fdf4', numBorder: '#bbf7d0', numColor: '#16a34a' };
 
-        const heroTitle   = isApproved ? <>Payment <span>Approved</span></>
-            : isRejected  ? <>Payment <span className="red">Declined</span></>
-            : isUpgrade   ? <>Upgrade <span>Submitted</span></>
-            : isDowngrade ? <>Downgrade <span className="orange">Submitted</span></>
-            : isRenewalUser ? <>Renewal <span>Submitted</span></>
+        const heroTitle = isApproved
+            ? <>Payment <span>Approved</span></>
+            : isRejected
+            ? <>Payment <span className="red">Declined</span></>
+            : isUpgrade
+            ? <>Upgrade <span>Submitted</span></>
+            : isDowngrade
+            ? <>Downgrade <span className="orange">Submitted</span></>
+            : isRenewalUser
+            ? <>Renewal <span>Submitted</span></>
             : <>Payment <span>Submitted</span></>;
 
-        const heroSub     = isApproved ? "Your Plus membership is now active!"
-            : isRejected  ? "Your payment request was declined by admin."
-            : isUpgrade   ? "Your upgrade request is being reviewed by our admin team."
-            : isDowngrade ? "Your downgrade request is being reviewed by our admin team."
+        const heroSub = isApproved ? "Your Plus membership is now active!"
+            : isRejected    ? "Your payment request was declined by admin."
+            : isUpgrade     ? "Your upgrade request is being reviewed by our admin team."
+            : isDowngrade   ? "Your downgrade request is being reviewed by our admin team."
             : isRenewalUser ? "Your renewal request is being reviewed by our admin team."
             : "Your payment is being reviewed by our admin team.";
 
-        const badgeLabel  = isApproved ? "Active"
-            : isRejected  ? "Declined"
-            : isUpgrade   ? "Upgrade Under Review"
-            : isDowngrade ? "Downgrade Under Review"
+        const badgeLabel = isApproved ? "Active"
+            : isRejected    ? "Declined"
+            : isUpgrade     ? "Upgrade Under Review"
+            : isDowngrade   ? "Downgrade Under Review"
             : isRenewalUser ? "Renewal Under Review"
             : "Under Review";
 
-        const cardTitle   = isApproved ? "Plus Membership Active!"
-            : isRejected  ? "Payment Declined"
-            : isUpgrade   ? "Upgrade Request Submitted"
-            : isDowngrade ? "Downgrade Request Submitted"
+        const cardTitle = isApproved ? "Plus Membership Active!"
+            : isRejected    ? "Payment Declined"
+            : isUpgrade     ? "Upgrade Request Submitted"
+            : isDowngrade   ? "Downgrade Request Submitted"
             : isRenewalUser ? "Renewal Request Submitted"
             : "Payment Under Review";
 
-        const cardDesc    = isApproved
+        const cardDesc = isApproved
             ? <>Your account has been upgraded to <strong style={{ color: '#0f172a' }}>Plus membership</strong>. You can now create your store on DynamicxMart.</>
             : isRejected
             ? <>Your payment request was <strong style={{ color: '#0f172a' }}>declined</strong> by our admin team. Please submit a new payment request with a valid transaction ID.</>
@@ -384,38 +385,24 @@ export default function PricingPayment() {
                     <div style={{ maxWidth: 480, margin: '0 auto', padding: '48px 24px 80px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                         <div style={{ background: '#fff', border: '1.5px solid #f1f5f9', borderRadius: 24, padding: '40px 32px', textAlign: 'center', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
 
-                            {/* Icon */}
                             <div style={{ width: 72, height: 72, borderRadius: '50%', background: cfg.iconBg, border: `1.5px solid ${cfg.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                                 {isApproved ? (
-                                    <svg width="32" height="32" fill="none" stroke={cfg.iconStroke} strokeWidth="1.8" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" /><polyline points="20 6 9 17 4 12" />
-                                    </svg>
+                                    <svg width="32" height="32" fill="none" stroke={cfg.iconStroke} strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="20 6 9 17 4 12"/></svg>
                                 ) : isRejected ? (
-                                    <svg width="32" height="32" fill="none" stroke={cfg.iconStroke} strokeWidth="1.8" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
-                                    </svg>
+                                    <svg width="32" height="32" fill="none" stroke={cfg.iconStroke} strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                                 ) : (
-                                    <svg width="32" height="32" fill="none" stroke={cfg.iconStroke} strokeWidth="1.8" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-                                    </svg>
+                                    <svg width="32" height="32" fill="none" stroke={cfg.iconStroke} strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                 )}
                             </div>
 
-                            {/* Badge */}
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: cfg.badgeBg, border: `1.5px solid ${cfg.badgeBorder}`, color: cfg.badgeColor, borderRadius: 100, padding: '4px 14px', fontSize: '0.7rem', fontWeight: 700, marginBottom: 16 }}>
                                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.dotColor, flexShrink: 0 }} />
                                 {badgeLabel}
                             </span>
 
-                            <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 12px', letterSpacing: '-0.3px' }}>
-                                {cardTitle}
-                            </h2>
+                            <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 12px', letterSpacing: '-0.3px' }}>{cardTitle}</h2>
+                            <p style={{ fontSize: '0.84rem', color: '#64748b', lineHeight: 1.75, margin: '0 0 24px', fontWeight: 400 }}>{cardDesc}</p>
 
-                            <p style={{ fontSize: '0.84rem', color: '#64748b', lineHeight: 1.75, margin: '0 0 24px', fontWeight: 400 }}>
-                                {cardDesc}
-                            </p>
-
-                            {/* Info box */}
                             <div style={{ background: cfg.infoBg, border: `1.5px solid ${cfg.infoBorder}`, borderRadius: 14, padding: '14px 18px', marginBottom: 24, textAlign: 'left' }}>
                                 {isApproved ? (
                                     <>
@@ -468,33 +455,22 @@ export default function PricingPayment() {
                                 )}
                             </div>
 
-                            {/* Action Button */}
                             {isApproved ? (
-                                <button
-                                    onClick={() => navigate("/create-store")}
-                                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 32px', background: '#0f172a', color: '#fff', borderRadius: 100, fontSize: '0.84rem', fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                                >
+                                <button onClick={() => navigate("/create-store")} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 32px', background: '#0f172a', color: '#fff', borderRadius: 100, fontSize: '0.84rem', fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                                     Go to Create Store
                                     <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                                 </button>
                             ) : isRejected ? (
-                                <button
-                                    onClick={() => { setScreen("form"); setRequestStatus(null); }}
-                                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 32px', background: '#dc2626', color: '#fff', borderRadius: 100, fontSize: '0.84rem', fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                                >
+                                <button onClick={() => { setScreen("form"); setRequestStatus(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 32px', background: '#dc2626', color: '#fff', borderRadius: 100, fontSize: '0.84rem', fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                                     Try Again
                                     <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                                 </button>
                             ) : (
-                                <button
-                                    onClick={() => navigate("/")}
-                                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 32px', background: '#0f172a', color: '#fff', borderRadius: 100, fontSize: '0.84rem', fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                                >
+                                <button onClick={() => navigate("/")} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 32px', background: '#0f172a', color: '#fff', borderRadius: 100, fontSize: '0.84rem', fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                                     Back to Home
                                     <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                                 </button>
                             )}
-
                         </div>
                     </div>
                 </div>
@@ -502,14 +478,11 @@ export default function PricingPayment() {
         );
     }
 
-    // ════════════════════════════════════════════════
     // ── PAYMENT FORM ──
-    // ════════════════════════════════════════════════
     return (
         <>
             <style>{CSS}</style>
             <div className="pay-root">
-
                 <div className="pay-hero">
                     <div className="pay-eyebrow">
                         <div className="pay-eyebrow-line" />
@@ -522,8 +495,6 @@ export default function PricingPayment() {
 
                 <form onSubmit={handleSubmit}>
                     <div className="pay-body">
-
-                        {/* ── LEFT ── */}
                         <div>
                             {requestStatus === "rejected" && (
                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, background: '#fff1f2', border: '1.5px solid #fecdd3', color: '#9f1239', fontSize: '0.82rem', fontWeight: 500, marginBottom: 16 }}>
@@ -608,7 +579,6 @@ export default function PricingPayment() {
                             )}
                         </div>
 
-                        {/* ── RIGHT ── */}
                         <div className="pay-panel">
                             <p className="pay-sec-label">Order Summary</p>
                             {amount && (
@@ -649,7 +619,6 @@ export default function PricingPayment() {
                             </button>
                             <p className="pay-secure">Secure · Encrypted · Trusted</p>
                         </div>
-
                     </div>
                 </form>
             </div>

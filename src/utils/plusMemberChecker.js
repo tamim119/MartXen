@@ -2,10 +2,6 @@
 import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
-/**
- * Check if user's Plus subscription has expired
- * Returns { expired: boolean, expiresAt: Date, daysLeft: number }
- */
 export const checkSubscriptionExpiry = async (userId) => {
   try {
     const userRef = doc(db, "users", userId);
@@ -17,12 +13,10 @@ export const checkSubscriptionExpiry = async (userId) => {
     
     const userData = userSnap.data();
     
-    // যদি Plus user না হয় তাহলে check করার দরকার নেই
     if (userData.role !== "plus") {
       return { expired: false, expiresAt: null, daysLeft: null };
     }
     
-    // Expiry date না থাকলে calculate করো
     if (!userData.plusExpiresAt) {
       const activatedAt = userData.plusActivatedAt 
         ? new Date(userData.plusActivatedAt) 
@@ -34,16 +28,15 @@ export const checkSubscriptionExpiry = async (userId) => {
       if (billing === "yearly") {
         expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       } else {
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
+        expiresAt.setDate(expiresAt.getDate() + 30); // ✅ fixed
       }
       
-      // Database এ save করো
       await updateDoc(userRef, {
         plusExpiresAt: expiresAt.toISOString(),
       });
       
       const now = new Date();
-      const daysLeft = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+      const daysLeft = Math.floor((expiresAt - now) / (1000 * 60 * 60 * 24)); // ✅ fixed
       
       return {
         expired: expiresAt < now,
@@ -52,14 +45,12 @@ export const checkSubscriptionExpiry = async (userId) => {
       };
     }
     
-    // Expiry date থাকলে check করো
     const expiresAt = new Date(userData.plusExpiresAt);
     const now = new Date();
-    const daysLeft = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+    const daysLeft = Math.floor((expiresAt - now) / (1000 * 60 * 60 * 24)); // ✅ fixed
     
     const hasExpired = expiresAt < now;
     
-    // যদি expire হয়ে গেছে এবং এখনো role downgrade করা হয় নি
     if (hasExpired && userData.role === "plus") {
       await downgradeExpiredSubscription(userId);
     }
@@ -75,9 +66,6 @@ export const checkSubscriptionExpiry = async (userId) => {
   }
 };
 
-/**
- * Downgrade user to customer role when subscription expires
- */
 export const downgradeExpiredSubscription = async (userId) => {
   try {
     const userRef = doc(db, "users", userId);
@@ -94,9 +82,6 @@ export const downgradeExpiredSubscription = async (userId) => {
   }
 };
 
-/**
- * Renew subscription
- */
 export const renewSubscription = async (userId, plan, billing, amount) => {
   try {
     const userRef = doc(db, "users", userId);
@@ -106,7 +91,7 @@ export const renewSubscription = async (userId, plan, billing, amount) => {
     if (billing === "yearly") {
       expiresAt.setFullYear(expiresAt.getFullYear() + 1);
     } else {
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
+      expiresAt.setDate(expiresAt.getDate() + 30); // ✅ fixed
     }
     
     await updateDoc(userRef, {
@@ -127,9 +112,6 @@ export const renewSubscription = async (userId, plan, billing, amount) => {
   }
 };
 
-/**
- * Format days left message
- */
 export const formatExpiryMessage = (daysLeft) => {
   if (daysLeft <= 0) return "Expired";
   if (daysLeft === 1) return "Expires tomorrow";

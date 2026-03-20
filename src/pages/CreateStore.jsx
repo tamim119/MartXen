@@ -22,14 +22,11 @@ const CSS = `
     margin: 48px auto 80px;
     max-width: 680px;
 }
-
-/* ── Header ── */
 .cs-head { margin-bottom: 32px; }
 .cs-title { font-size: 1.75rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; margin: 0 0 8px; }
 .cs-title span { color: #16a34a; }
 .cs-subtitle { font-size: 0.85rem; color: #94a3b8; line-height: 1.65; margin: 0; max-width: 480px; font-weight: 400; }
 
-/* ── Alert ── */
 .cs-alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 12px; font-size: 0.825rem; font-weight: 500; line-height: 1.5; margin-bottom: 20px; }
 .cs-alert-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-size: 0.65rem; font-weight: 800; }
 .cs-alert.error   { background: #fff1f2; border: 1.5px solid #fecdd3; color: #9f1239; }
@@ -42,18 +39,10 @@ const CSS = `
 .cs-alert-close { background: none; border: none; cursor: pointer; padding: 0; opacity: 0.45; font-size: 0.95rem; color: inherit; transition: opacity 0.15s; flex-shrink: 0; }
 .cs-alert-close:hover { opacity: 1; }
 
-/* ── Form card ── */
 .cs-card { background: #fff; border: 1.5px solid #f1f5f9; border-radius: 24px; padding: 32px 28px; }
 
-/* ── Logo upload ── */
 .cs-logo-wrap { margin-bottom: 28px; }
-.cs-logo-area {
-    display: flex; align-items: center; gap: 20px;
-    padding: 20px 22px;
-    border: 1.5px solid #f1f5f9; border-radius: 18px;
-    background: #f8fafc; cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-}
+.cs-logo-area { display: flex; align-items: center; gap: 20px; padding: 20px 22px; border: 1.5px solid #f1f5f9; border-radius: 18px; background: #f8fafc; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
 .cs-logo-area:hover { border-color: #16a34a; background: #f0fdf4; }
 .cs-logo-preview { width: 64px; height: 64px; border-radius: 14px; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0; }
 .cs-logo-placeholder { width: 64px; height: 64px; border-radius: 14px; background: #fff; border: 1.5px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #cbd5e1; flex-shrink: 0; }
@@ -62,7 +51,6 @@ const CSS = `
 .cs-logo-hint { font-size: 0.72rem; color: #94a3b8; font-weight: 400; }
 .cs-logo-change { font-size: 0.72rem; font-weight: 700; color: #16a34a; margin-top: 4px; }
 
-/* ── Fields ── */
 .cs-fields { display: flex; flex-direction: column; gap: 16px; }
 .cs-field { display: flex; flex-direction: column; gap: 6px; }
 .cs-label { font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
@@ -74,32 +62,19 @@ const CSS = `
 .cs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 480px) { .cs-row { grid-template-columns: 1fr; } }
 
-/* loading dots */
 .cs-dots { display: inline-flex; align-items: center; gap: 4px; }
 .cs-dots span { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.85); display: inline-block; animation: cs-dot 1.1s ease-in-out infinite; }
 .cs-dots span:nth-child(2) { animation-delay: 0.18s; }
 .cs-dots span:nth-child(3) { animation-delay: 0.36s; }
 @keyframes cs-dot { 0%,80%,100%{transform:translateY(0);opacity:.5} 40%{transform:translateY(-5px);opacity:1} }
 
-/* ── Submit ── */
 .cs-submit { width: 100%; padding: 14px; background: #16a34a; color: #fff; font-size: 0.9rem; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; border: none; border-radius: 14px; cursor: pointer; margin-top: 8px; transition: all 0.22s; box-shadow: 0 4px 16px rgba(22,163,74,0.3); display: flex; align-items: center; justify-content: center; gap: 8px; }
 .cs-submit:hover:not(:disabled) { background: #15803d; transform: translateY(-2px); box-shadow: 0 8px 22px rgba(22,163,74,0.38); }
 .cs-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-/* ═══════════════════════════════════
-   STATUS SCREENS
-═══════════════════════════════════ */
 .cs-status-root { font-family: 'Plus Jakarta Sans', sans-serif; min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
 
-/* ── Access Denied ── */
-.cs-access-card {
-    background: #fff;
-    border: 1.5px solid #f1f5f9;
-    border-radius: 24px;
-    max-width: 400px; width: 100%;
-    overflow: hidden;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.08);
-}
+.cs-access-card { background: #fff; border: 1.5px solid #f1f5f9; border-radius: 24px; max-width: 400px; width: 100%; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.08); }
 .cs-access-body { padding: 32px 28px 28px; text-align: center; }
 .cs-access-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
 .cs-access-icon.red { background: #fff1f2; border: 1.5px solid #fecdd3; color: #ef4444; }
@@ -117,22 +92,21 @@ const CSS = `
 .cs-feature-dot { width: 16px; height: 16px; border-radius: 50%; background: #f0fdf4; border: 1.5px solid #bbf7d0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .cs-feature-dot.warn { background: #fff7ed; border-color: #fed7aa; }
 
-/* ── Status card (pending / approved / rejected) ── */
 .cs-status-card { text-align: center; padding: 40px 32px 32px; background: #fff; border: 1.5px solid #f1f5f9; border-radius: 24px; box-shadow: 0 8px 40px rgba(0,0,0,0.06); max-width: 420px; width: 100%; position: relative; overflow: hidden; }
 
 .cs-status-icon { width: 68px; height: 68px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
 .cs-status-icon.pending  { background: #fefce8; border: 1.5px solid #fde68a; color: #d97706; }
 .cs-status-icon.approved { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #16a34a; }
-.cs-status-icon.rejected { background: #fef2f2; border: 1.5px solid #fecaca; color: #ef4444; }
+.cs-status-icon.rejected { background: #fff7ed; border: 1.5px solid #fed7aa; color: #ea580c; }
 
 .cs-status-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 100px; padding: 4px 12px; font-size: 0.7rem; font-weight: 700; margin-bottom: 14px; }
 .cs-status-badge.pending  { background: #fefce8; border: 1.5px solid #fde68a; color: #854d0e; }
 .cs-status-badge.approved { background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; }
-.cs-status-badge.rejected { background: #fef2f2; border: 1.5px solid #fecaca; color: #b91c1c; }
+.cs-status-badge.rejected { background: #fff7ed; border: 1.5px solid #fed7aa; color: #c2410c; }
 .cs-badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 .cs-status-badge.pending  .cs-badge-dot { background: #f59e0b; }
 .cs-status-badge.approved .cs-badge-dot { background: #16a34a; }
-.cs-status-badge.rejected .cs-badge-dot { background: #ef4444; }
+.cs-status-badge.rejected .cs-badge-dot { background: #ea580c; }
 
 .cs-status-title { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 8px; }
 .cs-status-msg   { font-size: 0.82rem; color: #64748b; line-height: 1.7; margin: 0 0 22px; }
@@ -142,16 +116,16 @@ const CSS = `
 .cs-cta-btn.green:hover { background: #15803d; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(22,163,74,0.38); }
 .cs-cta-btn.red { background: #dc2626; color: #fff; box-shadow: 0 4px 14px rgba(220,38,38,0.3); }
 .cs-cta-btn.red:hover { background: #b91c1c; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(220,38,38,0.38); }
+.cs-cta-btn.ghost { background: #f1f5f9; color: #475569; box-shadow: none; }
+.cs-cta-btn.ghost:hover { background: #e2e8f0; color: #0f172a; transform: translateY(-1px); }
 
 .cs-redirect-note { font-size: 0.72rem; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 12px; }
 .cs-redirect-note b { color: #16a34a; font-weight: 700; }
 
-/* ── Expired warning items ── */
 .cs-warn-items { display: flex; flex-direction: column; gap: 7px; margin: 0 0 20px; text-align: left; background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: 12px; padding: 12px 14px; }
 .cs-warn-item { display: flex; align-items: center; gap: 9px; font-size: 0.78rem; font-weight: 500; color: #475569; }
 .cs-warn-dot { width: 16px; height: 16px; border-radius: 50%; background: #fff7ed; border: 1.5px solid #fed7aa; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.55rem; font-weight: 800; color: #ea580c; }
 
-/* ── Plan selector ── */
 .cs-plan-section { margin-bottom: 20px; text-align: left; }
 .cs-plan-label { font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; display: block; }
 .cs-plan-toggle { display: flex; background: #f1f5f9; border-radius: 10px; padding: 3px; margin-bottom: 12px; }
@@ -171,6 +145,23 @@ const CSS = `
 .cs-plan-card.selected .cs-plan-radio-dot { opacity: 1; transform: scale(1); }
 .cs-plan-loading { height: 90px; border-radius: 14px; background: linear-gradient(90deg, #f1f5f9 25%, #e8edf2 50%, #f1f5f9 75%); background-size: 200% 100%; animation: cs-shimmer 1.4s infinite; }
 @keyframes cs-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ✅ Rejected info box */
+.cs-rejected-info {
+    background: #fff7ed;
+    border: 1.5px solid #fed7aa;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+.cs-rejected-info-title {
+    font-size: 0.78rem; font-weight: 700; color: #c2410c;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+}
+.cs-rejected-info-text {
+    font-size: 0.75rem; color: #78350f; line-height: 1.65; font-weight: 400;
+}
 
 @media (max-width: 480px) {
     .cs-root { padding: 0 14px; margin: 32px auto 60px; }
@@ -192,10 +183,11 @@ const Alert = ({ type, message, onDismiss }) => {
     );
 };
 
+// ✅ rejected badge/title/icon সব soft orange করা হয়েছে
 const STATUS_CONFIG = {
-    pending:  { icon: ClockIcon,       iconClass: 'pending',  badgeClass: 'pending',  badgeLabel: 'Under Review', title: 'Application Under Review',  cardClass: 'pending'  },
-    approved: { icon: CheckCircleIcon, iconClass: 'approved', badgeClass: 'approved', badgeLabel: 'Approved',      title: 'Store Approved!',           cardClass: 'approved' },
-    rejected: { icon: XCircleIcon,     iconClass: 'rejected', badgeClass: 'rejected', badgeLabel: 'Rejected',      title: 'Application Rejected',      cardClass: 'rejected' },
+    pending:  { icon: ClockIcon,       iconClass: 'pending',  badgeClass: 'pending',  badgeLabel: 'Under Review',  title: 'Application Under Review', cardClass: 'pending'  },
+    approved: { icon: CheckCircleIcon, iconClass: 'approved', badgeClass: 'approved', badgeLabel: 'Approved',      title: 'Store Approved!',          cardClass: 'approved' },
+    rejected: { icon: XCircleIcon,     iconClass: 'rejected', badgeClass: 'rejected', badgeLabel: 'Not Approved',  title: 'Application Not Approved', cardClass: 'rejected' },
 };
 
 export default function CreateStore() {
@@ -223,7 +215,6 @@ export default function CreateStore() {
     const fetchSellerStatus = async () => {
         if (!user) { setLoading(false); return; }
 
-        // ── Expired user হলে store redirect করবে না ──
         const userIsExpired = user.plusExpired === true ||
                               (user.role === "customer" && !!user.plusActivatedAt);
         if (userIsExpired) { setLoading(false); return; }
@@ -239,7 +230,8 @@ export default function CreateStore() {
                     setMessage("Your store is live! You'll be redirected to your seller dashboard shortly.");
                     setTimeout(() => navigate("/store"), 5000);
                 } else if (store.status === "rejected") {
-                    setMessage("Unfortunately your application was rejected. Please contact support for more information.");
+                    // ✅ Soft message
+                    setMessage("Your application was not approved this time. You're welcome to review your details and resubmit a new application, or contact our support team for further assistance.");
                 }
             }
         } catch (err) {
@@ -249,7 +241,6 @@ export default function CreateStore() {
         }
     };
 
-    // countdown timer for approved redirect
     useEffect(() => {
         if (status === "approved" && alreadySubmitted) {
             setCountdown(3);
@@ -297,7 +288,6 @@ export default function CreateStore() {
         }
     };
 
-    // ── Plan selection state — সব hooks early return এর আগে ──
     const [renewBilling,   setRenewBilling]   = useState("monthly");
     const [pricingData,    setPricingData]    = useState(null);
     const [pricingLoading, setPricingLoading] = useState(false);
@@ -307,7 +297,6 @@ export default function CreateStore() {
         if (!authLoading) fetchSellerStatus();
     }, [user, authLoading]);
 
-    // Firestore থেকে pricing fetch — expired user এর জন্য
     useEffect(() => {
         if (!user) return;
         const userIsExpired = user.plusExpired === true ||
@@ -319,7 +308,6 @@ export default function CreateStore() {
             .then(snap => {
                 if (snap.exists()) {
                     const d = snap.data();
-                    console.log("Pricing data fields:", Object.keys(d), d);
                     setPricingData(d);
                     const defaultBilling = user?.plusBilling || "monthly";
                     setRenewBilling(defaultBilling);
@@ -333,7 +321,6 @@ export default function CreateStore() {
             .finally(() => setPricingLoading(false));
     }, [user]);
 
-    // billing toggle করলে selectedPlan update করো
     useEffect(() => {
         if (!pricingData) return;
         const amt = renewBilling === "yearly"
@@ -342,12 +329,8 @@ export default function CreateStore() {
         setSelectedPlan({ billing: renewBilling, amount: String(amt) });
     }, [renewBilling, pricingData]);
 
-    // ── Renew handler ──
     const handleRenew = () => {
-        if (!selectedPlan?.amount) {
-            navigate("/pricing");
-            return;
-        }
+        if (!selectedPlan?.amount) { navigate("/pricing"); return; }
         navigate("/payment", {
             state: {
                 plan:     "plus",
@@ -361,19 +344,15 @@ export default function CreateStore() {
     if (authLoading || loading) return <Loading />;
     if (!user) return <Navigate to="/login" replace />;
 
-    // ── Expired check ──
     const isExpired = user.plusExpired === true ||
                       (user.role === "customer" && !!user.plusActivatedAt);
 
-    /* ── Expired user ── */
+    /* ── Expired ── */
     if (isExpired) {
-        const currency = pricingData?.currencySymbol || "৳";
+        const currency   = pricingData?.currencySymbol || "৳";
         const monthlyAmt = pricingData?.monthlyPrice || pricingData?.monthlyAmount || pricingData?.monthly || pricingData?.plusMonthlyPrice || pricingData?.plusMonthly || "";
         const yearlyAmt  = pricingData?.yearlyPrice  || pricingData?.yearlyAmount  || pricingData?.yearly  || pricingData?.plusYearlyPrice  || pricingData?.plusYearly  || "";
-        // yearly saving calculate করো
-        const yearlySaving = monthlyAmt && yearlyAmt
-            ? Math.round((Number(monthlyAmt) * 12) - Number(yearlyAmt))
-            : null;
+        const yearlySaving = monthlyAmt && yearlyAmt ? Math.round((Number(monthlyAmt) * 12) - Number(yearlyAmt)) : null;
 
         return (
             <>
@@ -381,89 +360,39 @@ export default function CreateStore() {
                 <div className="cs-status-root">
                     <div className="cs-access-card" style={{ maxWidth: 440 }}>
                         <div className="cs-access-body">
-
-                            <div className="cs-access-icon orange">
-                                <XCircleIcon size={28} strokeWidth={1.8} />
-                            </div>
-
-                            <span className="cs-access-badge orange">
-                                <span className="cs-access-badge-dot" />
-                                Subscription Expired
-                            </span>
-
+                            <div className="cs-access-icon orange"><XCircleIcon size={28} strokeWidth={1.8} /></div>
+                            <span className="cs-access-badge orange"><span className="cs-access-badge-dot" />Subscription Expired</span>
                             <p className="cs-access-title">Your Membership Has Expired</p>
-                            <p className="cs-access-msg" style={{ marginBottom: 16 }}>
-                                Renew your Plus membership to reactivate your store. Choose a plan below.
-                            </p>
-
+                            <p className="cs-access-msg" style={{ marginBottom: 16 }}>Renew your Plus membership to reactivate your store. Choose a plan below.</p>
                             <div className="cs-warn-items">
-                                {[
-                                    "Your store is currently deactivated",
-                                    "All your store data is safe and intact",
-                                ].map((item, i) => (
-                                    <div key={i} className="cs-warn-item">
-                                        <div className="cs-warn-dot">!</div>
-                                        {item}
-                                    </div>
+                                {["Your store is currently deactivated", "All your store data is safe and intact"].map((item, i) => (
+                                    <div key={i} className="cs-warn-item"><div className="cs-warn-dot">!</div>{item}</div>
                                 ))}
                             </div>
-
-                            {/* ── Plan Selector ── */}
                             <div className="cs-plan-section">
                                 <span className="cs-plan-label">Choose your plan</span>
-
-                                {/* Monthly / Yearly toggle */}
                                 <div className="cs-plan-toggle">
-                                    <button
-                                        className={"cs-plan-toggle-btn" + (renewBilling === "monthly" ? " active" : "")}
-                                        onClick={() => setRenewBilling("monthly")}
-                                        type="button"
-                                    >Monthly</button>
-                                    <button
-                                        className={"cs-plan-toggle-btn" + (renewBilling === "yearly" ? " active" : "")}
-                                        onClick={() => setRenewBilling("yearly")}
-                                        type="button"
-                                    >
-                                        Yearly
-                                        {yearlySaving > 0 && <span style={{color:'#16a34a', marginLeft: 4}}>· Save {currency}{yearlySaving}</span>}
+                                    <button className={"cs-plan-toggle-btn" + (renewBilling === "monthly" ? " active" : "")} onClick={() => setRenewBilling("monthly")} type="button">Monthly</button>
+                                    <button className={"cs-plan-toggle-btn" + (renewBilling === "yearly" ? " active" : "")} onClick={() => setRenewBilling("yearly")} type="button">
+                                        Yearly {yearlySaving > 0 && <span style={{color:'#16a34a', marginLeft: 4}}>· Save {currency}{yearlySaving}</span>}
                                     </button>
                                 </div>
-
-                                {/* Plan cards */}
                                 {pricingLoading ? (
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                                        <div className="cs-plan-loading" />
-                                        <div className="cs-plan-loading" />
+                                        <div className="cs-plan-loading" /><div className="cs-plan-loading" />
                                     </div>
                                 ) : pricingData ? (
                                     <div className="cs-plan-cards">
-                                        {/* Monthly card */}
-                                        <div
-                                            className={"cs-plan-card" + (renewBilling === "monthly" ? " selected" : "")}
-                                            onClick={() => setRenewBilling("monthly")}
-                                        >
+                                        <div className={"cs-plan-card" + (renewBilling === "monthly" ? " selected" : "")} onClick={() => setRenewBilling("monthly")}>
                                             <div className="cs-plan-radio"><div className="cs-plan-radio-dot" /></div>
                                             <div className="cs-plan-card-name">Monthly</div>
-                                            <div className="cs-plan-card-price">
-                                                {currency}{monthlyAmt || "—"}
-                                                <span>/mo</span>
-                                            </div>
+                                            <div className="cs-plan-card-price">{currency}{monthlyAmt || "—"}<span>/mo</span></div>
                                         </div>
-
-                                        {/* Yearly card */}
-                                        <div
-                                            className={"cs-plan-card" + (renewBilling === "yearly" ? " selected" : "")}
-                                            onClick={() => setRenewBilling("yearly")}
-                                        >
+                                        <div className={"cs-plan-card" + (renewBilling === "yearly" ? " selected" : "")} onClick={() => setRenewBilling("yearly")}>
                                             <div className="cs-plan-radio"><div className="cs-plan-radio-dot" /></div>
                                             <div className="cs-plan-card-name">Yearly</div>
-                                            <div className="cs-plan-card-price">
-                                                {currency}{yearlyAmt || "—"}
-                                                <span>/yr</span>
-                                            </div>
-                                            {yearlySaving > 0 && (
-                                                <div className="cs-plan-card-save">Save {currency}{yearlySaving}</div>
-                                            )}
+                                            <div className="cs-plan-card-price">{currency}{yearlyAmt || "—"}<span>/yr</span></div>
+                                            {yearlySaving > 0 && <div className="cs-plan-card-save">Save {currency}{yearlySaving}</div>}
                                         </div>
                                     </div>
                                 ) : (
@@ -472,33 +401,20 @@ export default function CreateStore() {
                                     </p>
                                 )}
                             </div>
-
                             {(() => {
                                 const prevBilling = user?.plusBilling || "monthly";
                                 let actionText = "Renew";
-                                
                                 if (prevBilling !== renewBilling) {
-                                    if (prevBilling === "monthly" && renewBilling === "yearly") {
-                                        actionText = "Upgrade";
-                                    } else if (prevBilling === "yearly" && renewBilling === "monthly") {
-                                        actionText = "Downgrade";
-                                    }
+                                    actionText = prevBilling === "monthly" && renewBilling === "yearly" ? "Upgrade" : "Downgrade";
                                 }
-                                
                                 return (
-                                    <button
-                                        onClick={handleRenew}
-                                        className="cs-cta-btn red"
-                                        disabled={!selectedPlan?.amount}
-                                        style={{ width: '100%', justifyContent: 'center', opacity: !selectedPlan?.amount ? 0.5 : 1 }}
-                                    >
+                                    <button onClick={handleRenew} className="cs-cta-btn red" disabled={!selectedPlan?.amount} style={{ width: '100%', justifyContent: 'center', opacity: !selectedPlan?.amount ? 0.5 : 1 }}>
                                         <RefreshCwIcon size={14} />
                                         {actionText} — Pay {currency}{selectedPlan?.amount || "…"} / {renewBilling === "yearly" ? "yr" : "mo"}
                                         <ArrowRightIcon size={13} />
                                     </button>
                                 );
                             })()}
-
                         </div>
                     </div>
                 </div>
@@ -506,7 +422,7 @@ export default function CreateStore() {
         );
     }
 
-    /* ── Not a plus user (never had membership) → Access Denied ── */
+    /* ── Not plus ── */
     if (user.role !== "plus" && user.role !== "seller") {
         return (
             <>
@@ -514,17 +430,10 @@ export default function CreateStore() {
                 <div className="cs-status-root">
                     <div className="cs-access-card">
                         <div className="cs-access-body">
-                            <div className="cs-access-icon red">
-                                <XCircleIcon size={28} strokeWidth={1.8} />
-                            </div>
-                            <span className="cs-access-badge red">
-                                <span className="cs-access-badge-dot" />
-                                Access Denied
-                            </span>
+                            <div className="cs-access-icon red"><XCircleIcon size={28} strokeWidth={1.8} /></div>
+                            <span className="cs-access-badge red"><span className="cs-access-badge-dot" />Access Denied</span>
                             <p className="cs-access-title">Plus Membership Required</p>
-                            <p className="cs-access-msg">
-                                You need an active Plus membership to open a store on DynamicxMart. Upgrade now and start selling today.
-                            </p>
+                            <p className="cs-access-msg">You need an active Plus membership to open a store on MartXen. Upgrade now and start selling today.</p>
                             <div className="cs-features">
                                 {[
                                     "Create and manage your own online store",
@@ -543,9 +452,7 @@ export default function CreateStore() {
                                 ))}
                             </div>
                             <Link to="/pricing" className="cs-cta-btn green">
-                                <SparklesIcon size={14} />
-                                Get Plus Membership
-                                <ArrowRightIcon size={13} />
+                                <SparklesIcon size={14} /> Get Plus Membership <ArrowRightIcon size={13} />
                             </Link>
                         </div>
                     </div>
@@ -572,6 +479,7 @@ export default function CreateStore() {
                         </span>
                         <p className="cs-status-title">{cfg.title}</p>
                         <p className="cs-status-msg">{message}</p>
+
                         {status === "approved" && (
                             <>
                                 <Link to="/store" className="cs-cta-btn green">
@@ -583,10 +491,40 @@ export default function CreateStore() {
                                 </p>
                             </>
                         )}
-                        {(status === "pending" || status === "rejected") && (
+
+                        {status === "pending" && (
                             <Link to="/" className="cs-cta-btn green">
                                 Back to Home <ArrowRightIcon size={13} />
                             </Link>
+                        )}
+
+                        {/* ✅ Rejected — resubmit option */}
+                        {status === "rejected" && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', alignItems: 'center' }}>
+                                {/* Info box */}
+                                <div className="cs-rejected-info">
+                                    <div className="cs-rejected-info-title">
+                                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                                            <circle cx="8" cy="8" r="7" stroke="#c2410c" strokeWidth="1.5"/>
+                                            <path d="M8 5v3.5M8 11h.01" stroke="#c2410c" strokeWidth="1.8" strokeLinecap="round"/>
+                                        </svg>
+                                        What you can do
+                                    </div>
+                                    <p className="cs-rejected-info-text">
+                                        Review your store details, make sure all information is accurate and complete, then resubmit your application. You can also reach out to our support team for guidance.
+                                    </p>
+                                </div>
+                                <button
+                                    className="cs-cta-btn green"
+                                    style={{ width: '100%', justifyContent: 'center' }}
+                                    onClick={() => { setAlreadySubmitted(false); setStatus(""); setStoreInfo({ name: "", username: "", description: "", email: "", contact: "", address: "", image: "" }); }}
+                                >
+                                    <StoreIcon size={14} /> Resubmit Application <ArrowRightIcon size={13} />
+                                </button>
+                                <Link to="/" className="cs-cta-btn ghost" style={{ width: '100%', justifyContent: 'center' }}>
+                                    Back to Home
+                                </Link>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -601,15 +539,13 @@ export default function CreateStore() {
             <div className="cs-root">
                 <div className="cs-head">
                     <h1 className="cs-title">Create your <span>Store</span></h1>
-                    <p className="cs-subtitle">Fill in your store details and start selling immediately on DynamicxMart.</p>
+                    <p className="cs-subtitle">Fill in your store details and start selling immediately on MartXen.</p>
                 </div>
 
                 {alert && <Alert type={alert.type} message={alert.message} onDismiss={clearAlert} />}
 
                 <div className="cs-card">
                     <form onSubmit={onSubmit}>
-
-                        {/* Logo */}
                         <div className="cs-logo-wrap">
                             <label className="cs-logo-area">
                                 {storeInfo.image ? (
@@ -618,15 +554,11 @@ export default function CreateStore() {
                                     <div className="cs-logo-placeholder"><StoreIcon size={24} strokeWidth={1.5} /></div>
                                 )}
                                 <div className="cs-logo-info">
-                                    <div className="cs-logo-title">
-                                        <UploadIcon size={13} />
-                                        {storeInfo.image ? 'Change Logo' : 'Upload Store Logo'}
-                                    </div>
+                                    <div className="cs-logo-title"><UploadIcon size={13} />{storeInfo.image ? 'Change Logo' : 'Upload Store Logo'}</div>
                                     <div className="cs-logo-hint">PNG, JPG up to 5MB · optional</div>
                                     {storeInfo.image && <div className="cs-logo-change">Click to change</div>}
                                 </div>
-                                <input type="file" accept="image/*" hidden
-                                    onChange={e => setStoreInfo(p => ({ ...p, image: e.target.files[0] }))} />
+                                <input type="file" accept="image/*" hidden onChange={e => setStoreInfo(p => ({ ...p, image: e.target.files[0] }))} />
                             </label>
                         </div>
 
@@ -641,12 +573,10 @@ export default function CreateStore() {
                                     <input className="cs-input" name="name" type="text" placeholder="Happy Shop" value={storeInfo.name} onChange={onChange} />
                                 </div>
                             </div>
-
                             <div className="cs-field">
                                 <label className="cs-label"><FileTextIcon size={12} /> Description</label>
                                 <textarea className="cs-textarea" name="description" rows={4} placeholder="Tell customers what your store is about..." value={storeInfo.description} onChange={onChange} />
                             </div>
-
                             <div className="cs-row">
                                 <div className="cs-field">
                                     <label className="cs-label"><MailIcon size={12} /> Email</label>
@@ -654,21 +584,15 @@ export default function CreateStore() {
                                 </div>
                                 <div className="cs-field">
                                     <label className="cs-label"><PhoneIcon size={12} /> Contact</label>
-                                    <input className="cs-input" name="contact" type="text" placeholder="+880 1234 567890" value={storeInfo.contact} onChange={onChange} />
+                                    <input className="cs-input" name="contact" type="text" placeholder="01712345678" value={storeInfo.contact} onChange={onChange} />
                                 </div>
                             </div>
-
                             <div className="cs-field">
                                 <label className="cs-label"><MapPinIcon size={12} /> Address</label>
                                 <textarea className="cs-textarea" name="address" rows={3} placeholder="123 Main St, Dhaka, Bangladesh" value={storeInfo.address} onChange={onChange} />
                             </div>
-
                             <button type="submit" className="cs-submit" disabled={submitting}>
-                                {submitting ? (
-                                    <span className="cs-dots"><span /><span /><span /></span>
-                                ) : (
-                                    <><StoreIcon size={16} /> Create Store</>
-                                )}
+                                {submitting ? <span className="cs-dots"><span /><span /><span /></span> : <><StoreIcon size={16} /> Create Store</>}
                             </button>
                         </div>
                     </form>

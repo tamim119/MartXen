@@ -17,12 +17,13 @@ export const fetchCart = createAsyncThunk(
   }
 );
 
-// Sync cart to Firestore
+// Sync cart to Firestore — empty cart ও save করো
 export const syncCartToFirestore = createAsyncThunk(
   "cart/syncCart",
   async ({ userId, items }, { rejectWithValue }) => {
     try {
-      await setDoc(doc(db, "carts", userId), { items }, { merge: true });
+      // ✅ items.length === 0 হলেও save করো — order place এর পর cart clear হবে
+      await setDoc(doc(db, "carts", userId), { items }, { merge: false });
       return items;
     } catch (error) {
       console.error("Error syncing cart:", error);
@@ -30,6 +31,15 @@ export const syncCartToFirestore = createAsyncThunk(
     }
   }
 );
+
+// ✅ Variant-aware match — size/color/skinType সহ exact match
+const isSameVariant = (a, b) =>
+  a.id === b.id &&
+  (a.size      || "") === (b.size      || "") &&
+  (a.color     || "") === (b.color     || "") &&
+  (a.skinType  || "") === (b.skinType  || "") &&
+  (a.ageRange  || "") === (b.ageRange  || "") &&
+  (a.language  || "") === (b.language  || "");
 
 const cartSlice = createSlice({
   name: "cart",
@@ -41,7 +51,7 @@ const cartSlice = createSlice({
   },
   reducers: {
     addToCart: (state, action) => {
-      const existing = state.items.find(i => i.id === action.payload.id);
+      const existing = state.items.find(i => isSameVariant(i, action.payload));
       if (existing) {
         existing.qty += 1;
       } else {
@@ -50,16 +60,20 @@ const cartSlice = createSlice({
       state.total = calcTotal(state.items);
     },
     removeFromCart: (state, action) => {
-      state.items = state.items.filter(i => i.id !== action.payload);
+      if (typeof action.payload === "object" && action.payload !== null) {
+        state.items = state.items.filter(i => !isSameVariant(i, action.payload));
+      } else {
+        state.items = state.items.filter(i => i.id !== action.payload);
+      }
       state.total = calcTotal(state.items);
     },
     updateQty: (state, action) => {
-      const item = state.items.find(i => i.id === action.payload.id);
+      // payload: { id, qty, size?, color?, skinType?, ageRange?, language? }
+      const item = state.items.find(i => isSameVariant(i, action.payload));
       if (item) {
         item.qty = action.payload.qty;
-        // Remove item if quantity is 0
         if (item.qty <= 0) {
-          state.items = state.items.filter(i => i.id !== action.payload.id);
+          state.items = state.items.filter(i => !isSameVariant(i, action.payload));
         }
       }
       state.total = calcTotal(state.items);
@@ -70,7 +84,6 @@ const cartSlice = createSlice({
       state.status = "idle";
       state.error = null;
     },
-    // Add this to set cart items directly (useful for initial load)
     setCartItems: (state, action) => {
       state.items = action.payload;
       state.total = calcTotal(state.items);
@@ -78,54 +91,28 @@ const cartSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch cart
-      .addCase(fetchCart.pending, (state) => { 
-        state.status = "loading"; 
-        state.error = null;
-      })
+      .addCase(fetchCart.pending,   (state) => { state.status = "loading"; state.error = null; })
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.items = action.payload;
         state.total = calcTotal(state.items);
         state.status = "succeeded";
         state.error = null;
       })
-      .addCase(fetchCart.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload || "Failed to fetch cart";
-      })
-      // Sync cart
-      .addCase(syncCartToFirestore.pending, (state) => {
-        // Don't change status to loading during sync to avoid UI flicker
-        state.error = null;
-      })
-      .addCase(syncCartToFirestore.fulfilled, (state) => {
-        state.error = null;
-      })
-      .addCase(syncCartToFirestore.rejected, (state, action) => {
-        state.error = action.payload || "Failed to sync cart";
-        console.error("Cart sync failed:", action.payload);
-      });
+      .addCase(fetchCart.rejected,  (state, action) => { state.status = "failed"; state.error = action.payload || "Failed to fetch cart"; })
+      .addCase(syncCartToFirestore.pending,   (state) => { state.error = null; })
+      .addCase(syncCartToFirestore.fulfilled, (state) => { state.error = null; })
+      .addCase(syncCartToFirestore.rejected,  (state, action) => { state.error = action.payload || "Failed to sync cart"; console.error("Cart sync failed:", action.payload); });
   },
 });
 
-// Helper function to calculate total
 const calcTotal = (items) =>
   items.reduce((sum, i) => sum + (i.price || 0) * (i.qty || 0), 0);
 
-export const { 
-  addToCart, 
-  removeFromCart, 
-  updateQty, 
-  clearCart,
-  setCartItems 
-} = cartSlice.actions;
-
+export const { addToCart, removeFromCart, updateQty, clearCart, setCartItems } = cartSlice.actions;
 export default cartSlice.reducer;
 
-// Selectors
-export const selectCartItems = (state) => state.cart.items;
-export const selectCartTotal = (state) => state.cart.total;
-export const selectCartCount = (state) =>
-  state.cart.items.reduce((n, i) => n + (i.qty || 0), 0);
+export const selectCartItems  = (state) => state.cart.items;
+export const selectCartTotal  = (state) => state.cart.total;
+export const selectCartCount  = (state) => state.cart.items.reduce((n, i) => n + (i.qty || 0), 0);
 export const selectCartStatus = (state) => state.cart.status;
-export const selectCartError = (state) => state.cart.error;
+export const selectCartError  = (state) => state.cart.error;

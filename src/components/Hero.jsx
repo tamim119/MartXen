@@ -423,7 +423,7 @@ const Hero = () => {
                             <div className="h-bottom">
                                 <div>
                                     <p className="h-price-label">Starts from</p>
-                                    <p className="h-price-val">{currency}1250</p>
+                                    <p className="h-price-val">{currency}550</p>
                                 </div>
                                 <Link to="/shop">
                                     <button className="h-cta">

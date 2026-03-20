@@ -19,13 +19,13 @@ export const addProductReview = async (productId, reviewData) => {
         if (!productDoc.exists()) {
             throw new Error('Product not found');
         }
-        
+
         const review = {
             userId: reviewData.userId,
             user: {
                 name: reviewData.userName,
                 email: reviewData.userEmail,
-                image: reviewData.userImage || '/default-avatar.png'
+                image: reviewData.userImage || null
             },
             rating: reviewData.rating,
             review: reviewData.review,
@@ -33,8 +33,16 @@ export const addProductReview = async (productId, reviewData) => {
             productId: productId
         };
 
+        // ✅ FIX: avgRating আর ratingCount calculate করো
+        const existingRatings = productDoc.data().rating || [];
+        const allRatings      = [...existingRatings, review];
+        const ratingCount     = allRatings.length;
+        const avgRating       = allRatings.reduce((sum, r) => sum + r.rating, 0) / ratingCount;
+
         await updateDoc(productRef, {
-            rating: arrayUnion(review)
+            rating:      arrayUnion(review),
+            ratingCount: ratingCount,                          // ✅ total review count
+            avgRating:   Math.round(avgRating * 10) / 10,     // ✅ avg rating (1 decimal)
         });
 
         return { success: true };
@@ -70,7 +78,6 @@ export const getStoreReviews = async (storeId) => {
             });
         });
         
-        // Sort by date (newest first)
         allReviews.sort((a, b) => {
             const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
             const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);

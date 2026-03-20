@@ -113,7 +113,7 @@ const StoreNavbar = ({ storeInfo, onMenuToggle }) => {
                         <MenuIcon size={18} />
                     </button>
                     <Link to="/" className="sn-logo">
-                        <span className="sn-logo-accent">Dynamicx</span>Mart
+                        <span className="sn-logo-accent">Mart</span>Xen
                         <span className="sn-logo-dot">.</span>
                         <span className="sn-badge">
                             <span className="sn-badge-dot" />

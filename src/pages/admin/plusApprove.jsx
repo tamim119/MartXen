@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { db } from "../../lib/firebase";
-import { collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
 import Loading from "../../components/Loading";
 import { Button } from "@/components/ui/button";
 import {
     CheckIcon, XIcon, ClockIcon, BadgeCheckIcon,
     ZapIcon, RefreshCwIcon,
-    ArrowUpIcon, ArrowDownIcon, ChevronDownIcon
+    ArrowUpIcon, ArrowDownIcon, ChevronDownIcon, CalendarDaysIcon
 } from "lucide-react";
 
 const CSS = `
@@ -38,38 +38,36 @@ const CSS = `
 
 .apl-card { background: #fff; border: 1.5px solid #f1f5f9; border-radius: 20px; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
 .apl-card:hover { border-color: #e2e8f0; }
-.apl-card.open     { border-color: #bbf7d0; }
+.apl-card.open     { border-color: #c7d2fe; }
 .apl-card.approved { border-color: #bbf7d0; }
-.apl-card.rejected { border-color: #fecaca; }
+.apl-card.rejected { border-color: #c7d2fe; }
 
 .apl-card-head { display: flex; align-items: center; gap: 14px; padding: 14px 18px; cursor: pointer; user-select: none; }
 
-.apl-card-num { font-size: 0.72rem; font-weight: 800; color: #16a34a; background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 8px; width: 28px; height: 28px; min-width: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.apl-card.approved .apl-card-num { color: #16a34a; }
-.apl-card.rejected .apl-card-num { background: #fef2f2; border-color: #fecaca; color: #ef4444; }
+.apl-card-num { font-size: 0.72rem; font-weight: 800; color: #6366f1; background: #eef2ff; border: 1.5px solid #c7d2fe; border-radius: 8px; width: 28px; height: 28px; min-width: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.apl-card.approved .apl-card-num { color: #16a34a; background: #f0fdf4; border-color: #bbf7d0; }
+.apl-card.rejected .apl-card-num { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
 
 .apl-card-main { flex: 1; min-width: 0; }
 .apl-card-name { font-size: 0.84rem; font-weight: 700; color: #0f172a; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .apl-card-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-.apl-card-email { font-size: 0.7rem; color: #94a3b8; }
-.apl-card-sep   { color: #e2e8f0; font-size: 0.7rem; }
 .apl-card-date  { font-size: 0.7rem; color: #94a3b8; }
-@media (max-width: 640px) { .apl-card-date, .apl-card-sep { display: none; } }
+@media (max-width: 640px) { .apl-card-date { display: none; } }
 
 .apl-card-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .apl-amount { font-size: 0.95rem; font-weight: 800; color: #0f172a; white-space: nowrap; }
 
 .apl-billing-pill { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 6px; font-size: 0.62rem; font-weight: 700; flex-shrink: 0; }
-.apl-billing-pill.monthly { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
-.apl-billing-pill.yearly  { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+.apl-billing-pill.monthly { background: #eef2ff; border: 1px solid #c7d2fe; color: #4338ca; }
+.apl-billing-pill.yearly  { background: #eef2ff; border: 1px solid #c7d2fe; color: #4338ca; }
 
 .apl-status { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 700; border-radius: 100px; padding: 3px 10px; flex-shrink: 0; text-transform: capitalize; }
 .apl-status.pending  { background: #fef9c3; border: 1.5px solid #fde68a; color: #854d0e; }
 .apl-status.approved { background: #dcfce7; border: 1.5px solid #86efac; color: #15803d; }
-.apl-status.rejected { background: #fef2f2; border: 1.5px solid #fecaca; color: #dc2626; }
+.apl-status.rejected { background: #eef2ff; border: 1.5px solid #c7d2fe; color: #4338ca; }
 
 .apl-chevron { width: 28px; height: 28px; min-width: 28px; border-radius: 8px; background: #f8fafc; border: 1.5px solid #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; transition: all 0.2s; }
-.apl-card.open .apl-chevron { background: #f0fdf4; border-color: #bbf7d0; color: #16a34a; transform: rotate(180deg); }
+.apl-card.open .apl-chevron { background: #eef2ff; border-color: #c7d2fe; color: #6366f1; transform: rotate(180deg); }
 
 .apl-card-body { border-top: 1.5px solid #f1f5f9; padding: 14px 18px 16px; background: #f8fafc; display: flex; flex-direction: column; gap: 10px; }
 
@@ -78,10 +76,8 @@ const CSS = `
 
 .apl-renewal-notice.renewal { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
 .apl-renewal-notice.renewal .apl-renewal-notice-icon { background: #dbeafe; border-color: #bfdbfe; color: #1d4ed8; }
-
 .apl-renewal-notice.upgrade { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
 .apl-renewal-notice.upgrade .apl-renewal-notice-icon { background: #dcfce7; border-color: #bbf7d0; color: #16a34a; }
-
 .apl-renewal-notice.downgrade { background: #fff7ed; border-color: #fed7aa; color: #9a3412; }
 .apl-renewal-notice.downgrade .apl-renewal-notice-icon { background: #ffedd5; border-color: #fed7aa; color: #ea580c; }
 
@@ -92,7 +88,7 @@ const CSS = `
 .apl-plan-box-email { font-size: 0.7rem; color: #64748b; font-weight: 500; margin-top: 1px; }
 .apl-plan-box-duration { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; border-radius: 6px; padding: 2px 8px; font-size: 0.65rem; font-weight: 700; width: fit-content; }
 .apl-plan-box-duration.green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
-.apl-plan-box-duration.blue  { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+.apl-plan-box-duration.blue  { background: #eef2ff; border: 1px solid #c7d2fe; color: #4338ca; }
 .apl-plan-box-right { text-align: right; flex-shrink: 0; }
 .apl-plan-box-price { font-size: 1.15rem; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; }
 .apl-plan-box-period { font-size: 0.68rem; color: #94a3b8; font-weight: 500; }
@@ -103,7 +99,7 @@ const CSS = `
 .apl-info-val { font-size: 0.78rem; font-weight: 600; color: #0f172a; word-break: break-word; flex: 1; }
 .apl-info-hr { height: 1.5px; background: #f1f5f9; border: none; margin: 2px 0; }
 
-.apl-actions-col { display: flex; gap: 6px; padding-top: 2px; flex-wrap: wrap; }
+.apl-actions-col { display: flex; gap: 8px; padding-top: 2px; flex-wrap: wrap; }
 
 .apl-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 280px; background: #fff; border: 1.5px solid #f1f5f9; border-radius: 20px; gap: 8px; padding: 40px 24px; text-align: center; }
 .apl-empty-icon { width: 64px; height: 64px; border-radius: 20px; background: #f8fafc; border: 1.5px solid #f1f5f9; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
@@ -151,7 +147,6 @@ export default function AdminPlusApprove() {
     const [approvingId, setApprovingId] = useState(null);
     const [decliningId, setDecliningId] = useState(null);
     const [alert,       setAlert]       = useState(null);
-    const [userPreviousPlans, setUserPreviousPlans] = useState({});
 
     const showAlert  = (type, msg) => setAlert({ type, message: msg });
     const clearAlert = () => setAlert(null);
@@ -159,42 +154,11 @@ export default function AdminPlusApprove() {
     useEffect(() => {
         const unsub = onSnapshot(
             collection(db, "plusRequests"),
-            async snap => {
+            snap => {
                 const list = snap.docs
                     .map(d => ({ id: d.id, ...d.data() }))
                     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-                const previousPlans = {};
-                for (const req of list) {
-                    if (req.userId && req.isRenewal) {
-                        const userApprovedRequests = list
-                            .filter(r =>
-                                r.userId === req.userId &&
-                                r.status === "approved" &&
-                                r.id !== req.id
-                            )
-                            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-                        if (userApprovedRequests.length > 0) {
-                            previousPlans[req.userId] = userApprovedRequests[0].billing || "monthly";
-                        } else {
-                            try {
-                                const userDoc = await getDoc(doc(db, "users", req.userId));
-                                if (userDoc.exists()) {
-                                    const userData = userDoc.data();
-                                    previousPlans[req.userId] = userData.plusBilling || "monthly";
-                                } else {
-                                    previousPlans[req.userId] = "monthly";
-                                }
-                            } catch (err) {
-                                console.error("Error fetching user data:", err);
-                                previousPlans[req.userId] = "monthly";
-                            }
-                        }
-                    }
-                }
-
-                setUserPreviousPlans(previousPlans);
                 setRequests(list);
                 setLoading(false);
             },
@@ -212,10 +176,18 @@ export default function AdminPlusApprove() {
             if (req.billing === "yearly") {
                 expiresAt.setFullYear(expiresAt.getFullYear() + 1);
             } else {
-                expiresAt.setMonth(expiresAt.getMonth() + 1);
+                expiresAt.setDate(expiresAt.getDate() + 30);
             }
 
-            await updateDoc(doc(db, "users", req.userId), {
+            const userRef = doc(db, "users", req.userId);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+                showAlert("error", `User not found! userId: ${req.userId}`);
+                return;
+            }
+
+            await updateDoc(userRef, {
                 role:              "plus",
                 plusPlan:          req.plan,
                 plusBilling:       req.billing,
@@ -305,7 +277,9 @@ export default function AdminPlusApprove() {
                             const isRenewal   = req.isRenewal === true;
                             const isYearly    = req.billing === "yearly";
 
-                            const previousBilling = userPreviousPlans[req.userId];
+                            // ✅ previousBilling সরাসরি request থেকে আসে
+                            const previousBilling = req.previousBilling;
+
                             let actionType = "new";
                             let actionText = "New Member";
                             let noticeClass = "renewal";
@@ -318,7 +292,7 @@ export default function AdminPlusApprove() {
                                     actionText = "Renewal";
                                     noticeClass = "renewal";
                                     noticeIcon = <RefreshCwIcon size={11} />;
-                                    noticeText = `Renewal Request — This user was previously a Plus member with a ${previousBilling} plan and is renewing with the same ${req.billing} plan.`;
+                                    noticeText = `Renewal Request — This user was previously on a ${previousBilling === "yearly" ? "Yearly" : "Monthly"} plan and is renewing with the same plan.`;
                                 } else if (previousBilling === "monthly" && req.billing === "yearly") {
                                     actionType = "upgrade";
                                     actionText = "Upgrade";
@@ -343,22 +317,18 @@ export default function AdminPlusApprove() {
                             return (
                                 <div key={req.id} className={`apl-card${isOpen ? ' open' : ''} ${status !== 'pending' ? status : ''}`}>
 
-                                    {/* ── Header ── */}
                                     <div className="apl-card-head" onClick={() => setExpandedId(isOpen ? null : req.id)}>
                                         <div className="apl-card-num">{i + 1}</div>
-
                                         <div className="apl-card-main">
                                             <p className="apl-card-name">{req.userName || "Unknown User"}</p>
                                             <div className="apl-card-meta">
-                                                <span className="apl-card-email">{req.userEmail || req.userId}</span>
-                                                <span className="apl-card-sep">·</span>
                                                 <span className="apl-card-date">{fmtDate(req.createdAt)}</span>
                                             </div>
                                         </div>
-
                                         <div className="apl-card-right">
                                             <span className={`apl-billing-pill ${isYearly ? 'yearly' : 'monthly'}`}>
-                                                {isYearly ? '📅 1 Year' : '🗓 1 Month'}
+                                                <CalendarDaysIcon size={10} />
+                                                {isYearly ? '1 Year' : '1 Month'}
                                             </span>
                                             <span className="apl-amount">{req.currency}{req.amount}</span>
                                             <span className={`apl-status ${status}`}>
@@ -371,23 +341,18 @@ export default function AdminPlusApprove() {
                                         </div>
                                     </div>
 
-                                    {/* ── Expanded body ── */}
                                     {isOpen && (
                                         <div className="apl-card-body">
 
-                                            {/* Action notice */}
                                             {actionType !== "new" && (
                                                 <div className={`apl-renewal-notice ${noticeClass}`}>
-                                                    <div className="apl-renewal-notice-icon">
-                                                        {noticeIcon}
-                                                    </div>
+                                                    <div className="apl-renewal-notice-icon">{noticeIcon}</div>
                                                     <span>
                                                         <strong>{noticeText.split('—')[0]}</strong> — {noticeText.split('—')[1]}
                                                     </span>
                                                 </div>
                                             )}
 
-                                            {/* ── Plan highlight box ── */}
                                             <div className="apl-plan-box">
                                                 <div className="apl-plan-box-left">
                                                     <span className="apl-plan-box-type">{actionText}</span>
@@ -403,7 +368,6 @@ export default function AdminPlusApprove() {
                                                 </div>
                                             </div>
 
-                                            {/* Info card */}
                                             <div className="apl-info-card">
                                                 <div className="apl-info-row">
                                                     <span className="apl-info-key">Method</span>
@@ -440,36 +404,27 @@ export default function AdminPlusApprove() {
                                                 )}
                                             </div>
 
-                                            {/* ── Actions — শুধু pending এ দেখাবে ── */}
                                             {status === 'pending' && (
                                                 <div className="apl-actions-col">
                                                     <Button
                                                         variant="outline"
+                                                        size="sm"
                                                         disabled={isBusy}
                                                         onClick={() => handleReject(req)}
-                                                        className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-300 gap-1.5 rounded-full text-xs font-bold"
+                                                        className="rounded-full border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-300 font-bold text-xs gap-1.5 px-4 h-8"
                                                     >
-                                                        <XIcon size={13} />
+                                                        <XIcon size={12} />
                                                         {isDeclining ? "Declining…" : "Decline"}
                                                     </Button>
 
                                                     <Button
-                                                        variant="outline"
+                                                        size="sm"
                                                         disabled={isBusy}
                                                         onClick={() => handleApprove(req)}
-                                                        className="border-green-200 text-green-600 hover:bg-green-500 hover:text-white hover:border-green-500 gap-1.5 rounded-full text-xs font-bold"
+                                                        className="rounded-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-xs gap-1.5 px-4 h-8 border-0 shadow-none"
                                                     >
-                                                        <CheckIcon size={13} />
-                                                        {isApproving
-                                                            ? "Approving…"
-                                                            : actionType === "new"
-                                                                ? `Approve · ${isYearly ? '1 Year' : '1 Month'}`
-                                                                : actionType === "renewal"
-                                                                    ? `Approve Renewal · ${isYearly ? '1 Year' : '1 Month'}`
-                                                                    : actionType === "upgrade"
-                                                                        ? `Approve Upgrade · ${isYearly ? '1 Year' : '1 Month'}`
-                                                                        : `Approve Downgrade · ${isYearly ? '1 Year' : '1 Month'}`
-                                                        }
+                                                        <CheckIcon size={12} />
+                                                        {isApproving ? "Approving…" : "Approve"}
                                                     </Button>
                                                 </div>
                                             )}

@@ -100,6 +100,18 @@ const CSS = `
     border-radius: 100px; display: flex; align-items: center; justify-content: center;
 }
 
+/* ✅ Loading skeleton for auth button */
+.nb-auth-skeleton {
+    width: 72px; height: 36px; border-radius: 100px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: nb-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes nb-shimmer {
+    0%   { background-position: 200% center; }
+    100% { background-position: -200% center; }
+}
+
 .nb-login {
     padding: 8px 20px; background: #16a34a; color: #fff; font-size: 0.85rem; font-weight: 600;
     border: none; border-radius: 100px; cursor: pointer; font-family: inherit;
@@ -157,13 +169,11 @@ const CSS = `
 .nb-overlay {
     position: fixed; inset: 0; background: rgba(15,23,42,0.4);
     backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
-    z-index: 1100; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    z-index: 1100; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 .nb-overlay.open { opacity: 1; pointer-events: all; }
 
-/* ══════════════════════════════
-   DRAWER
-══════════════════════════════ */
 .nb-drawer {
     position: fixed; top: 0; right: 0; bottom: 0;
     width: min(320px, 88vw); background: #fff; z-index: 1200;
@@ -173,7 +183,6 @@ const CSS = `
 }
 .nb-drawer.open { transform: translateX(0); }
 
-/* Header */
 .nb-dhead {
     display: flex; align-items: center; justify-content: space-between;
     padding: 18px 18px 14px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0;
@@ -185,13 +194,11 @@ const CSS = `
 }
 .nb-dclose:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
 
-/* Scrollable body */
 .nb-dbody {
     flex: 1; overflow-y: auto; padding: 16px 14px 8px;
     display: flex; flex-direction: column; gap: 0;
 }
 
-/* Search */
 .nb-dsearch {
     display: flex; align-items: center; gap: 9px;
     background: #f8fafc; border: 1.5px solid #e2e8f0;
@@ -200,14 +207,12 @@ const CSS = `
 }
 .nb-dsearch:focus-within { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.1); }
 
-/* Section label */
 .nb-dlabel {
     font-size: 0.68rem; font-weight: 700; color: #94a3b8;
     letter-spacing: 0.12em; text-transform: uppercase;
     padding: 0 4px; margin-bottom: 6px; margin-top: 2px;
 }
 
-/* Nav link item */
 .nb-dlink {
     display: flex; align-items: center; gap: 12px; padding: 10px 10px;
     color: #475569; text-decoration: none; font-size: 0.88rem; font-weight: 500;
@@ -218,7 +223,6 @@ const CSS = `
 .nb-dlink:hover { background: #f0fdf4; color: #16a34a; }
 .nb-dlink.active { background: #f0fdf4; color: #16a34a; font-weight: 600; }
 
-/* Icon box */
 .nb-dicon {
     width: 34px; height: 34px; border-radius: 10px; background: #f8fafc;
     border: 1.5px solid #f1f5f9;
@@ -229,18 +233,13 @@ const CSS = `
 .nb-dlink.active .nb-dicon {
     background: #dcfce7; border-color: #bbf7d0; color: #16a34a;
 }
-/* Red icon for wishlist */
 .nb-dlink:hover .nb-dicon.wish-icon,
 .nb-dlink.active .nb-dicon.wish-icon {
     background: #fef2f2; border-color: #fecaca; color: #ef4444;
 }
 
-/* Section divider */
-.nb-ddivider {
-    height: 1px; background: #f1f5f9; margin: 10px 0;
-}
+.nb-ddivider { height: 1px; background: #f1f5f9; margin: 10px 0; }
 
-/* Badge chips */
 .nb-count-chip {
     margin-left: auto; font-size: 0.72rem; font-weight: 700;
     padding: 2px 9px; border-radius: 100px;
@@ -257,12 +256,10 @@ const CSS = `
     box-shadow: 0 2px 8px rgba(22,163,74,0.3);
 }
 
-/* Footer */
 .nb-dfooter {
     padding: 12px 14px 16px; border-top: 1px solid #f1f5f9; flex-shrink: 0;
 }
 
-/* User card */
 .nb-ucard {
     display: flex; align-items: center; gap: 11px;
     padding: 11px 12px;
@@ -282,22 +279,6 @@ const CSS = `
 .nb-uname  { margin: 0; font-weight: 700; font-size: 0.875rem; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nb-uemail { margin: 2px 0 0; font-size: 0.72rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Footer action links */
-.nb-faction {
-    display: flex; align-items: center; gap: 10px; padding: 9px 10px;
-    color: #475569; text-decoration: none; font-size: 0.85rem; font-weight: 500;
-    border-radius: 11px; margin-bottom: 2px; transition: all 0.18s;
-    font-family: inherit; border: none; background: none; width: 100%;
-    cursor: pointer; text-align: left;
-}
-.nb-faction:hover { background: #f8fafc; color: #0f172a; }
-.nb-faction-icon {
-    width: 30px; height: 30px; border-radius: 8px;
-    background: #f1f5f9; display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; color: #64748b; transition: background 0.18s;
-}
-.nb-faction:hover .nb-faction-icon { background: #e2e8f0; }
-
 .nb-signout {
     width: 100%; margin-top: 8px; padding: 11px;
     border-radius: 12px; border: 1.5px solid #fee2e2;
@@ -315,6 +296,14 @@ const CSS = `
     box-shadow: 0 2px 10px rgba(22,163,74,0.3);
 }
 .nb-dlogin:hover { background: #15803d; }
+
+/* ✅ Drawer footer skeleton */
+.nb-dfooter-skeleton {
+    height: 44px; border-radius: 14px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: nb-shimmer 1.4s ease-in-out infinite;
+}
 
 @media (max-width: 767px) {
     .nb-inner { padding: 0 16px; height: 60px; }
@@ -341,9 +330,9 @@ const CSS = `
 `;
 
 const Navbar = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { user } = useCurrentUser();
+    const navigate  = useNavigate();
+    const location  = useLocation();
+    const { user, loading } = useCurrentUser(); // ✅ loading নাও
 
     const [search,         setSearch]         = useState("");
     const [mobileOpen,     setMobileOpen]     = useState(false);
@@ -375,8 +364,18 @@ const Navbar = () => {
     useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
     useEffect(() => {
-        document.body.style.overflow = mobileOpen ? "hidden" : "";
-        return () => { document.body.style.overflow = ""; };
+        if (mobileOpen) {
+            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+            document.body.style.overflow = "hidden";
+            document.body.style.paddingRight = `${scrollbarWidth}px`;
+        } else {
+            document.body.style.overflow = "";
+            document.body.style.paddingRight = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+            document.body.style.paddingRight = "";
+        };
     }, [mobileOpen]);
 
     const handleSearch = (e) => {
@@ -400,10 +399,10 @@ const Navbar = () => {
     };
 
     const navLinks = [
-        { to: "/",        label: "Home",    Icon: Home  },
-        { to: "/shop",    label: "Shop",    Icon: Store },
+        { to: "/",        label: "Home",    Icon: Home     },
+        { to: "/shop",    label: "Shop",    Icon: Store    },
         { to: "/about",   label: "About",   Icon: Sparkles },
-        { to: "/contact", label: "Contact", Icon: Phone },
+        { to: "/contact", label: "Contact", Icon: Phone    },
     ];
 
     const isActive = (to) => location.pathname === to;
@@ -419,7 +418,7 @@ const Navbar = () => {
                     {/* Logo */}
                     <Link to="/" className="nb-logo">
                         <span className="nb-logo-text">
-                            <span className="nb-g">Dynamicx</span>Mart
+                            <span className="nb-g">Mart</span>Xen
                             <span className="nb-dot">.</span>
                         </span>
                         {isPlus && <span className="nb-badge">plus</span>}
@@ -445,17 +444,20 @@ const Navbar = () => {
                             />
                         </form>
 
-                        <Link to="/wishlist" className={`nb-icon-btn wish${isActive('/wishlist') ? ' active' : ''}`} aria-label="Wishlist">
+                        <Link to="/wishlist" className={`nb-icon-btn wish${isActive('/wishlist') ? ' active' : ''}`}>
                             <Heart size={17} fill={wishlistCount > 0 ? '#ef4444' : 'none'} stroke={wishlistCount > 0 ? '#ef4444' : 'currentColor'} />
                             {wishlistCount > 0 && <span className="nb-wbadge">{wishlistCount}</span>}
                         </Link>
 
-                        <Link to="/cart" className="nb-icon-btn" aria-label="Cart">
+                        <Link to="/cart" className="nb-icon-btn">
                             <ShoppingCart size={17} />
                             {cartCount > 0 && <span className="nb-cbadge">{cartCount > 99 ? '99+' : cartCount}</span>}
                         </Link>
 
-                        {user ? (
+                        {/* ✅ FIX: loading এ shimmer, তারপর user/login */}
+                        {loading ? (
+                            <div className="nb-auth-skeleton" />
+                        ) : user ? (
                             <div className="nb-profile" ref={profileRef}>
                                 <button className="nb-profile-btn" onClick={() => setProfileOpen(p => !p)}>
                                     <div className="nb-avatar">
@@ -506,11 +508,11 @@ const Navbar = () => {
                                 onBlur={() => setTSearchFocused(false)}
                             />
                         </form>
-                        <Link to="/wishlist" className={`nb-icon-btn wish${isActive('/wishlist') ? ' active' : ''}`} aria-label="Wishlist">
+                        <Link to="/wishlist" className={`nb-icon-btn wish${isActive('/wishlist') ? ' active' : ''}`}>
                             <Heart size={17} fill={wishlistCount > 0 ? '#ef4444' : 'none'} stroke={wishlistCount > 0 ? '#ef4444' : 'currentColor'} />
                             {wishlistCount > 0 && <span className="nb-wbadge">{wishlistCount}</span>}
                         </Link>
-                        <Link to="/cart" className="nb-icon-btn" aria-label="Cart">
+                        <Link to="/cart" className="nb-icon-btn">
                             <ShoppingCart size={17} />
                             {cartCount > 0 && <span className="nb-cbadge">{cartCount > 99 ? '99+' : cartCount}</span>}
                         </Link>
@@ -521,15 +523,15 @@ const Navbar = () => {
 
                     {/* ── Mobile Zone ── */}
                     <div className="nb-mzone">
-                        <Link to="/wishlist" className={`nb-icon-btn wish${isActive('/wishlist') ? ' active' : ''}`} aria-label="Wishlist">
+                        <Link to="/wishlist" className={`nb-icon-btn wish${isActive('/wishlist') ? ' active' : ''}`}>
                             <Heart size={18} fill={wishlistCount > 0 ? '#ef4444' : 'none'} stroke={wishlistCount > 0 ? '#ef4444' : 'currentColor'} />
                             {wishlistCount > 0 && <span className="nb-wbadge">{wishlistCount}</span>}
                         </Link>
-                        <Link to="/cart" className="nb-icon-btn" aria-label="Cart">
+                        <Link to="/cart" className="nb-icon-btn">
                             <ShoppingCart size={18} />
                             {cartCount > 0 && <span className="nb-cbadge">{cartCount > 99 ? '99+' : cartCount}</span>}
                         </Link>
-                        <button className="nb-hamburger" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+                        <button className="nb-hamburger" onClick={() => setMobileOpen(true)}>
                             <Menu size={19} />
                         </button>
                     </div>
@@ -537,22 +539,15 @@ const Navbar = () => {
             </nav>
 
             {/* Overlay */}
-            <div
-                className={`nb-overlay${mobileOpen ? " open" : ""}`}
-                onClick={() => setMobileOpen(false)}
-                aria-hidden="true"
-            />
+            <div className={`nb-overlay${mobileOpen ? " open" : ""}`} onClick={() => setMobileOpen(false)} />
 
-            {/* ══════════════════════════════
-                DRAWER
-            ══════════════════════════════ */}
+            {/* ══ DRAWER ══ */}
             <aside className={`nb-drawer${mobileOpen ? " open" : ""}`}>
 
-                {/* Header */}
                 <div className="nb-dhead">
                     <Link to="/" className="nb-logo" onClick={() => setMobileOpen(false)}>
                         <span className="nb-logo-text" style={{ fontSize: "1.25rem" }}>
-                            <span className="nb-g">Dynamicx</span>Mart
+                            <span className="nb-g">Mart</span>Xen
                             <span className="nb-dot" style={{ fontSize: "1.6rem" }}>.</span>
                         </span>
                         {isPlus && <span className="nb-badge" style={{ right: "-26px" }}>plus</span>}
@@ -562,10 +557,7 @@ const Navbar = () => {
                     </button>
                 </div>
 
-                {/* Scrollable body */}
                 <div className="nb-dbody">
-
-                    {/* Search */}
                     <form onSubmit={handleSearch} className="nb-dsearch">
                         <Search size={15} style={{ color: "#94a3b8", flexShrink: 0 }} />
                         <input
@@ -574,13 +566,9 @@ const Navbar = () => {
                         />
                     </form>
 
-                    {/* ── MENU ── */}
                     <p className="nb-dlabel">Menu</p>
                     {navLinks.filter(l => l.to !== "/shop").map(({ to, label, Icon }) => (
-                        <Link
-                            key={to} to={to}
-                            className={`nb-dlink${isActive(to) ? " active" : ""}`}
-                        >
+                        <Link key={to} to={to} className={`nb-dlink${isActive(to) ? " active" : ""}`}>
                             <span className="nb-dicon"><Icon size={15} /></span>
                             {label}
                         </Link>
@@ -588,7 +576,6 @@ const Navbar = () => {
 
                     <div className="nb-ddivider" />
 
-                    {/* ── SHOPPING ── */}
                     <p className="nb-dlabel">Shopping</p>
 
                     <Link to="/shop" className={`nb-dlink${isActive("/shop") ? " active" : ""}`}>
@@ -600,49 +587,26 @@ const Navbar = () => {
                         <span className="nb-dicon" style={{ position: "relative" }}>
                             <ShoppingCart size={15} />
                             {cartCount > 0 && (
-                                <span style={{
-                                    position: "absolute", top: -5, right: -5,
-                                    background: "#16a34a", color: "#fff",
-                                    fontSize: 8, fontWeight: 700, borderRadius: 100,
-                                    minWidth: 14, height: 14, padding: "0 3px",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                }}>
+                                <span style={{ position: "absolute", top: -5, right: -5, background: "#16a34a", color: "#fff", fontSize: 8, fontWeight: 700, borderRadius: 100, minWidth: 14, height: 14, padding: "0 3px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                     {cartCount}
                                 </span>
                             )}
                         </span>
                         Cart
-                        {cartCount > 0 && (
-                            <span className="nb-count-chip green">
-                                {cartCount} item{cartCount > 1 ? "s" : ""}
-                            </span>
-                        )}
+                        {cartCount > 0 && <span className="nb-count-chip green">{cartCount} item{cartCount > 1 ? "s" : ""}</span>}
                     </Link>
 
                     <Link to="/wishlist" className={`nb-dlink${isActive("/wishlist") ? " active" : ""}`}>
                         <span className="nb-dicon wish-icon" style={{ position: "relative" }}>
-                            <Heart size={15}
-                                fill={wishlistCount > 0 ? '#ef4444' : 'none'}
-                                stroke={wishlistCount > 0 ? '#ef4444' : 'currentColor'}
-                            />
+                            <Heart size={15} fill={wishlistCount > 0 ? '#ef4444' : 'none'} stroke={wishlistCount > 0 ? '#ef4444' : 'currentColor'} />
                             {wishlistCount > 0 && (
-                                <span style={{
-                                    position: "absolute", top: -5, right: -5,
-                                    background: "#ef4444", color: "#fff",
-                                    fontSize: 8, fontWeight: 700, borderRadius: 100,
-                                    minWidth: 14, height: 14, padding: "0 3px",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                }}>
+                                <span style={{ position: "absolute", top: -5, right: -5, background: "#ef4444", color: "#fff", fontSize: 8, fontWeight: 700, borderRadius: 100, minWidth: 14, height: 14, padding: "0 3px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                     {wishlistCount}
                                 </span>
                             )}
                         </span>
                         Wishlist
-                        {wishlistCount > 0 && (
-                            <span className="nb-count-chip red">
-                                {wishlistCount} saved
-                            </span>
-                        )}
+                        {wishlistCount > 0 && <span className="nb-count-chip red">{wishlistCount} saved</span>}
                     </Link>
 
                     <Link to="/orders" className={`nb-dlink${isActive("/orders") ? " active" : ""}`} onClick={() => setMobileOpen(false)}>
@@ -655,7 +619,6 @@ const Navbar = () => {
                         Address Book
                     </Link>
 
-                    {/* ── SELLER (Plus only) ── */}
                     {isPlus && (
                         <>
                             <div className="nb-ddivider" />
@@ -669,16 +632,15 @@ const Navbar = () => {
                     )}
                 </div>
 
-                {/* ══ Footer — User card + Sign out ══ */}
+                {/* ✅ FIX: Drawer footer এও loading handle */}
                 <div className="nb-dfooter">
-                    {user ? (
+                    {loading ? (
+                        <div className="nb-dfooter-skeleton" />
+                    ) : user ? (
                         <>
                             <div className="nb-ucard">
                                 <div className="nb-uavatar">
-                                    {user.photoURL
-                                        ? <img src={user.photoURL} alt="" />
-                                        : getInit()
-                                    }
+                                    {user.photoURL ? <img src={user.photoURL} alt="" /> : getInit()}
                                 </div>
                                 <div className="nb-uinfo">
                                     <p className="nb-uname">{user.displayName || "User"}</p>
@@ -690,10 +652,7 @@ const Navbar = () => {
                             </button>
                         </>
                     ) : (
-                        <button
-                            className="nb-dlogin"
-                            onClick={() => { navigate("/login"); setMobileOpen(false); }}
-                        >
+                        <button className="nb-dlogin" onClick={() => { navigate("/login"); setMobileOpen(false); }}>
                             Login to your account
                         </button>
                     )}

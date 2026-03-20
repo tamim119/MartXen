@@ -400,9 +400,25 @@ export default function Checkout() {
             ? { firstName: selectedAddr.firstName, lastName: selectedAddr.lastName, phone: selectedAddr.phone, street: selectedAddr.street, city: selectedAddr.city, division: selectedAddr.division, email: user.email }
             : { ...newForm, email: user.email };
 
+        // ✅ FIX: orderItems এ size, color এবং সব category-specific variants সহ save হবে
         const orderItems = cartItems.map(item => {
             const p = products.find(x => x.id === item.id);
-            return { productId: item.id, name: p?.name || "", price: p?.price || 0, image: p?.images?.[0] || p?.image || "", quantity: item.qty, storeId: p?.storeId || "" };
+            return {
+                productId: item.id,
+                name: p?.name || "",
+                price: p?.price || 0,
+                image: p?.images?.[0] || p?.image || "",
+                quantity: item.qty,
+                storeId: p?.storeId || "",
+                ...(item.size       && { size: item.size }),
+                ...(item.color      && { color: item.color }),
+                ...(item.skinType   && { skinType: item.skinType }),
+                ...(item.ageRange   && { ageRange: item.ageRange }),
+                ...(item.language   && { language: item.language }),
+                ...(item.material   && { material: item.material }),
+                ...(item.brand      && { brand: item.brand }),
+                ...(item.warranty   && { warranty: item.warranty }),
+            };
         }).filter(i => i.quantity > 0);
 
         if (!orderItems.length) { showAlert("error", "No valid items in cart."); return; }
@@ -428,8 +444,8 @@ export default function Checkout() {
             });
             setOrderPlaced(true);
             dispatch(clearCart());
-            // Firestore-এও cart clear করো
-            if (user?.uid) dispatch(syncCartToFirestore({ userId: user.uid, items: [] }));
+            // ✅ await করো — Firestore এ cart clear হওয়ার পর navigate করো
+            if (user?.uid) await dispatch(syncCartToFirestore({ userId: user.uid, items: [] }));
             navigate("/orders");
         } catch (err) {
             console.error("Order placement error:", err);

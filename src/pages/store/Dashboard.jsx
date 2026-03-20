@@ -1,5 +1,5 @@
 import Loading from "../../components/Loading";
-import { CircleDollarSignIcon, ShoppingBasketIcon, StarIcon, TagsIcon, ArrowRightIcon, RefreshCwIcon } from "lucide-react";
+import { CircleDollarSignIcon, ShoppingBasketIcon, StarIcon, TagsIcon, ArrowRightIcon, RefreshCwIcon, PauseCircleIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { useCurrentUser } from "../../hooks/useAuth";
@@ -29,6 +29,29 @@ const CSS = `
 .sd-alert-msg  { font-size: 0.8rem; }
 .sd-alert-close { background: none; border: none; cursor: pointer; padding: 0; opacity: 0.45; font-size: 0.95rem; color: inherit; transition: opacity 0.15s; flex-shrink: 0; }
 .sd-alert-close:hover { opacity: 1; }
+
+/* ── Pause Banner ── */
+.sd-pause-banner {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: #fff7ed; border: 1.5px solid #fed7aa;
+    border-radius: 16px; padding: 16px 18px; margin-bottom: 22px;
+}
+.sd-pause-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: #ffedd5; border: 1.5px solid #fed7aa;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: #ea580c;
+}
+.sd-pause-content { flex: 1; }
+.sd-pause-title { font-size: 0.88rem; font-weight: 800; color: #9a3412; margin: 0 0 4px; }
+.sd-pause-sub   { font-size: 0.78rem; color: #c2410c; margin: 0; line-height: 1.6; font-weight: 500; }
+.sd-pause-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #ffedd5; border: 1.5px solid #fed7aa;
+    color: #c2410c; border-radius: 100px; padding: 4px 12px;
+    font-size: 0.68rem; font-weight: 700; flex-shrink: 0; align-self: center;
+}
+.sd-pause-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #ea580c; }
 
 /* ── Refresh ── */
 .sd-refresh-btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; background: #f8fafc; border: 1.5px solid #f1f5f9; border-radius: 100px; font-size: 0.75rem; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; color: #64748b; cursor: pointer; transition: all 0.18s; }
@@ -103,6 +126,8 @@ const CSS = `
     .sd-title { font-size: 1.25rem; }
     .sd-reviews { display: none; }
     .sd-mobile-reviews { display: flex; }
+    .sd-pause-banner { flex-wrap: wrap; }
+    .sd-pause-badge { align-self: flex-start; }
 }
 `;
 
@@ -130,22 +155,42 @@ const Alert = ({ type, message, onDismiss }) => {
     );
 };
 
+// ── Pause Banner ──
+const PauseBanner = () => (
+    <div className="sd-pause-banner">
+        <div className="sd-pause-icon">
+            <PauseCircleIcon size={20} />
+        </div>
+        <div className="sd-pause-content">
+            <p className="sd-pause-title">Your store is currently paused</p>
+            <p className="sd-pause-sub">
+                Admin has temporarily paused your store. Your products are hidden from customers and no new orders can be placed. Please contact admin to reactivate your store.
+            </p>
+        </div>
+        <div className="sd-pause-badge">
+            <span className="sd-pause-badge-dot" />
+            Paused
+        </div>
+    </div>
+);
+
 export default function StoreDashboard() {
     const currency = import.meta.env.VITE_CURRENCY_SYMBOL || "৳";
     const navigate = useNavigate();
     const { user, loading: userLoading } = useCurrentUser();
 
-    const [loading, setLoading]     = useState(true);
+    const [loading,    setLoading]    = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [alert, setAlert]         = useState(null);
-    const [data, setData]           = useState({
+    const [alert,      setAlert]      = useState(null);
+    const [isStorePaused, setIsStorePaused] = useState(false);
+    const [data, setData] = useState({
         totalProducts: 0,
         totalEarnings: 0,
-        totalOrders: 0,
-        ratings: [],
+        totalOrders:   0,
+        ratings:       [],
     });
 
-    const showAlert = (type, message) => setAlert({ type, message });
+    const showAlert  = (type, message) => setAlert({ type, message });
     const clearAlert = () => setAlert(null);
 
     const fetchData = useCallback(async (showRefreshSpinner = false) => {
@@ -170,6 +215,9 @@ export default function StoreDashboard() {
                 return;
             }
 
+            // ✅ Store pause status check
+            setIsStorePaused(store.isActive === false);
+
             const [orders, products, reviews] = await Promise.all([
                 getStoreOrders(store.id),
                 getProductsByStore(store.id),
@@ -180,9 +228,9 @@ export default function StoreDashboard() {
 
             setData({
                 totalProducts: products.length || 0,
-                totalEarnings: totalEarnings || 0,
-                totalOrders: orders.length || 0,
-                ratings: reviews || [],
+                totalEarnings: totalEarnings    || 0,
+                totalOrders:   orders.length    || 0,
+                ratings:       reviews          || [],
             });
 
             if (showRefreshSpinner) {
@@ -204,10 +252,10 @@ export default function StoreDashboard() {
     }, [fetchData, userLoading]);
 
     const statCards = [
-        { title: "Products", value: data.totalProducts,                     icon: ShoppingBasketIcon },
+        { title: "Products", value: data.totalProducts,                       icon: ShoppingBasketIcon },
         { title: "Earnings", value: currency + data.totalEarnings.toFixed(0), icon: CircleDollarSignIcon },
-        { title: "Orders",   value: data.totalOrders,                       icon: TagsIcon },
-        { title: "Reviews",  value: data.ratings.length,                    icon: StarIcon },
+        { title: "Orders",   value: data.totalOrders,                         icon: TagsIcon },
+        { title: "Reviews",  value: data.ratings.length,                      icon: StarIcon },
     ];
 
     const formatDate = (val) => {
@@ -226,7 +274,7 @@ export default function StoreDashboard() {
         </div>
     );
 
-    const getReviewerName = (review) => {
+    const getReviewerName  = (review) => {
         const name = review.user?.name || review.userName || "Customer";
         if (name.includes('@')) return name.split('@')[0];
         return name;
@@ -234,10 +282,7 @@ export default function StoreDashboard() {
     const getReviewerImage = (review) => review.user?.image || review.userImage || null;
 
     const handleViewProduct = (productId) => {
-        if (!productId) {
-            showAlert("error", "Product not found.");
-            return;
-        }
+        if (!productId) { showAlert("error", "Product not found."); return; }
         navigate(`/product/${productId}`);
     };
 
@@ -261,14 +306,11 @@ export default function StoreDashboard() {
                     </button>
                 </h1>
 
+                {/* ✅ Pause Banner */}
+                {isStorePaused && <PauseBanner />}
+
                 {/* Inline Alert */}
-                {alert && (
-                    <Alert
-                        type={alert.type}
-                        message={alert.message}
-                        onDismiss={clearAlert}
-                    />
-                )}
+                {alert && <Alert type={alert.type} message={alert.message} onDismiss={clearAlert} />}
 
                 {/* Stats */}
                 <div className="sd-stats">

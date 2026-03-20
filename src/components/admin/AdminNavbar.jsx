@@ -36,7 +36,7 @@ const AdminNavbar = ({ onMenuToggle }) => (
                     <MenuIcon size={18} />
                 </button>
                 <Link to="/" className="an-logo">
-                    <span className="an-logo-accent">Dynamicx</span>Mart
+                    <span className="an-logo-accent">Mart</span>Xen
                     <span className="an-logo-dot">.</span>
                     <span className="an-admin-badge">
                         <span className="an-admin-badge-dot" />

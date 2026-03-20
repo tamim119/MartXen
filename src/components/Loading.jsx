@@ -119,7 +119,7 @@ export default function Loading() {
 
                     {/* Logo */}
                     <div className="ld-logo">
-                        <span className="ld-logo-accent">Dynamicx</span>Mart<span className="ld-logo-dot">.</span>
+                        <span className="ld-logo-accent">Mart</span>Xen<span className="ld-logo-dot">.</span>
                     </div>
 
                     {/* Spinner */}

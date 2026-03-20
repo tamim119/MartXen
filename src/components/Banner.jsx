@@ -1,3 +1,4 @@
+// Banner.js
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -49,10 +50,10 @@ export default function Banner() {
     const [settings, setSettings] = useState({
         enabled:      false,
         text:         "Get 20% OFF on Your First Order!",
-        couponCode:   "NEW20",
-        gradientFrom: "#16a34a",
-        gradientVia:  "#15803d",
-        gradientTo:   "#166534",
+        couponCode:   "",
+        gradientFrom: "#8B5CF6",
+        gradientVia:  "#9938CA",
+        gradientTo:   "#E0724A",
     });
 
     useEffect(() => {
@@ -64,7 +65,8 @@ export default function Banner() {
         return () => unsub();
     }, []);
 
-    if (!settings.enabled || !isOpen || !settings.couponCode) return null;
+    // ✅ Fix: শুধু enabled আর isOpen check করো, couponCode check বাদ
+    if (!settings.enabled || !isOpen) return null;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(settings.couponCode)
@@ -93,36 +95,40 @@ export default function Banner() {
                         </p>
                     </div>
 
-                    {/* Right — coupon + close */}
+                    {/* Right — coupon (conditional) + close */}
                     <div className="flex items-center gap-2 flex-shrink-0">
 
-                        {/* Coupon pill with shimmer */}
-                        <button
-                            type="button"
-                            onClick={handleCopy}
-                            className="bn-pill flex items-center gap-1.5 bg-white/15 border border-white/25 rounded-full px-3 py-1 hover:bg-white/25 active:scale-95 transition-all duration-150"
-                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                        >
-                            <Tag size={10} className="text-white/75 flex-shrink-0" />
-                            <span className="text-white text-xs font-bold tracking-widest uppercase">
-                                {settings.couponCode}
-                            </span>
-                            <span className="w-px h-3 bg-white/30 mx-0.5 flex-shrink-0" />
-                            <span className="flex items-center transition-all duration-200">
-                                {copied
-                                    ? <Check size={11} className="text-white" />
-                                    : <Copy  size={11} className="text-white/70" />
-                                }
-                            </span>
-                        </button>
+                        {/* ✅ Fix: couponCode থাকলেই শুধু pill দেখাবে */}
+                        {settings.couponCode && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={handleCopy}
+                                    className="bn-pill flex items-center gap-1.5 bg-white/15 border border-white/25 rounded-full px-3 py-1 hover:bg-white/25 active:scale-95 transition-all duration-150"
+                                    style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                                >
+                                    <Tag size={10} className="text-white/75 flex-shrink-0" />
+                                    <span className="text-white text-xs font-bold tracking-widest uppercase">
+                                        {settings.couponCode}
+                                    </span>
+                                    <span className="w-px h-3 bg-white/30 mx-0.5 flex-shrink-0" />
+                                    <span className="flex items-center transition-all duration-200">
+                                        {copied
+                                            ? <Check size={11} className="text-white" />
+                                            : <Copy  size={11} className="text-white/70" />
+                                        }
+                                    </span>
+                                </button>
 
-                        {/* "Copied!" label — desktop only */}
-                        <span
-                            className={`text-white/80 text-xs font-medium hidden sm:block transition-all duration-200 ${copied ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", minWidth: 44 }}
-                        >
-                            Copied!
-                        </span>
+                                {/* "Copied!" label — desktop only */}
+                                <span
+                                    className={`text-white/80 text-xs font-medium hidden sm:block transition-all duration-200 ${copied ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                                    style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", minWidth: 44 }}
+                                >
+                                    Copied!
+                                </span>
+                            </>
+                        )}
 
                         {/* Close button */}
                         <button

@@ -1,4 +1,4 @@
-import { addToCart, removeFromCart, updateQty } from "../lib/features/cart/cartSlice";
+import { removeFromCart, updateQty } from "../lib/features/cart/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const CSS = `
@@ -40,20 +40,35 @@ const CSS = `
 }
 `;
 
-const Counter = ({ productId }) => {
+// ✅ cartSlice এর isSameVariant এর মতোই exact match
+const isSameVariant = (a, b) =>
+    a.id === b.id &&
+    (a.size      || "") === (b.size      || "") &&
+    (a.color     || "") === (b.color     || "") &&
+    (a.skinType  || "") === (b.skinType  || "") &&
+    (a.ageRange  || "") === (b.ageRange  || "") &&
+    (a.language  || "") === (b.language  || "");
+
+const Counter = ({ productId, size = "", color = "", skinType = "", ageRange = "", language = "" }) => {
     const cartItems = useSelector(state => state.cart.items);
     const dispatch  = useDispatch();
 
-    const item = cartItems.find(i => i.id === productId);
+    // ✅ variant সহ exact item খুঁজে বের করো
+    const variantKey = { id: productId, size, color, skinType, ageRange, language };
+    const item = cartItems.find(i => isSameVariant(i, variantKey));
     const qty  = item?.qty || 0;
 
     const handleDecrease = () => {
-        if (qty <= 1) dispatch(removeFromCart(productId));
-        else dispatch(updateQty({ id: productId, qty: qty - 1 }));
+        if (qty <= 1) {
+            // ✅ variant সহ remove করো
+            dispatch(removeFromCart(variantKey));
+        } else {
+            dispatch(updateQty({ ...variantKey, qty: qty - 1 }));
+        }
     };
 
     const handleIncrease = () => {
-        dispatch(updateQty({ id: productId, qty: qty + 1 }));
+        dispatch(updateQty({ ...variantKey, qty: qty + 1 }));
     };
 
     return (

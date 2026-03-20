@@ -322,7 +322,7 @@ const About = () => {
                         <div className="ab-eyebrow-line" style={{ width: 40 }} />
                     </div>
                     <h1 className="ab-hero-title">
-                        About <span>DynamicxMart</span>
+                        About <span>MartXen</span>
                     </h1>
                     <p className="ab-hero-sub">
                         Born from a passion for innovation — delivering smarter, faster, and more joyful shopping experiences.
@@ -360,7 +360,7 @@ const About = () => {
                     </h2>
                     <div className="ab-story-grid">
                         <p className="ab-story-para">
-                            DynamicxMart was born out of a passion for innovation and a desire to revolutionize the way people shop online. Our journey began with a simple idea — to provide a platform where customers can easily discover, explore, and purchase a wide range of products.
+                            MartXen was born out of a passion for innovation and a desire to revolutionize the way people shop online. Our journey began with a simple idea — to provide a platform where customers can easily discover, explore, and purchase a wide range of products.
                         </p>
                         <p className="ab-story-para">
                             Since our inception, we've worked tirelessly to curate a diverse selection of high-quality products that cater to every taste and preference — from gadgets and electronics to accessories and clothing.
