@@ -128,7 +128,7 @@ const Contact = () => {
                             <p className="ct-card-label">Phone &amp; Email</p>
                             <div className="ct-card-text">
                                 <a href="tel:+8801700000000" className="ct-card-link">+880 1796-972098</a>
-                                <a href="mailto:support@dynamicxmart.com" className="ct-card-link">support@martxen.com</a>
+                                <a href="mailto:support@martxen.com" className="ct-card-link">support@martxen.com</a>
                                 <span style={{ marginTop: 8, display: "block" }}>Response within 24 business hours.</span>
                             </div>
                         </div>
