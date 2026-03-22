@@ -16,7 +16,7 @@ import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import { checkSubscriptionExpiry } from "../utils/plusMemberChecker";
 
-// Google Login
+// Google Login — signInWithRedirect use করে, page Google এ চলে যাবে
 export const loginWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
   await signInWithRedirect(auth, provider);
@@ -37,9 +37,8 @@ export const loginWithEmail = async (email, password) => {
   return result.user;
 };
 
-// ✅ Forgot Password — Firebase Auth দিয়ে email registered কিনা check করে
+// Forgot Password
 export const resetPassword = async (email) => {
-  // fetchSignInMethodsForEmail দিয়ে check করো email registered কিনা
   const methods = await fetchSignInMethodsForEmail(auth, email);
   if (!methods || methods.length === 0) {
     const err = new Error("No account found with this email.");
@@ -81,10 +80,14 @@ export const useCurrentUser = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // ── Google Redirect থেকে ফিরে আসলে ──
+    // result পেলে Firestore এ save করো, তারপর Home এ redirect
     getRedirectResult(auth)
       .then(async (result) => {
         if (result?.user) {
           await saveUserToFirestore(result.user);
+          // Google redirect success → Home এ পাঠাও
+          window.location.replace("/");
         }
       })
       .catch((err) => {

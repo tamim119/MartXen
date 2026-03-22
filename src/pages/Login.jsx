@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
     loginWithGoogle,
     loginWithEmail,
@@ -35,7 +35,6 @@ const CSS = `
     padding: 48px 20px;
     position: relative; z-index: 1;
 }
-
 .lp-card {
     width: 100%;
     max-width: 460px;
@@ -53,7 +52,6 @@ const CSS = `
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-
 .lp-logo {
     display: inline-flex; align-items: center; gap: 1px;
     font-size: 1.35rem; font-weight: 800; color: #0f172a;
@@ -62,10 +60,8 @@ const CSS = `
 }
 .lp-logo em  { color: #16a34a; font-style: normal; }
 .lp-logo sup { color: #16a34a; font-size: 1.7rem; line-height: 0; vertical-align: -0.15em; }
-
 .lp-h1  { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-bottom: 5px; letter-spacing: -0.5px; line-height: 1.2; }
 .lp-sub { font-size: 0.82rem; color: #94a3b8; font-weight: 400; margin-bottom: 26px; }
-
 .lp-alert {
     display: flex; align-items: flex-start; gap: 10px;
     padding: 11px 14px; border-radius: 11px;
@@ -88,7 +84,6 @@ const CSS = `
 .lp-alert-msg  { font-size: 0.77rem; opacity: 0.88; }
 .lp-alert-x    { background: none; border: none; cursor: pointer; padding: 0; opacity: 0.38; font-size: 0.9rem; color: inherit; transition: opacity 0.15s; flex-shrink: 0; }
 .lp-alert-x:hover { opacity: 1; }
-
 .lp-google-btn {
     width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
     padding: 11px 14px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;
@@ -98,11 +93,9 @@ const CSS = `
 }
 .lp-google-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
 .lp-google-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-
 .lp-div { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; }
 .lp-div-line { flex: 1; height: 1.5px; background: #f1f5f9; }
 .lp-div-text { font-size: 0.67rem; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-
 .lp-field { margin-bottom: 10px; }
 .lp-pass-wrap { position: relative; }
 .lp-pass-wrap .lp-inp { padding-right: 42px; }
@@ -112,7 +105,6 @@ const CSS = `
     color: #94a3b8; display: flex; align-items: center; transition: color 0.18s;
 }
 .lp-eye-btn:hover { color: #475569; }
-
 .lp-inp {
     width: 100%; padding: 12px 14px;
     border: 1.5px solid #f1f5f9; border-radius: 12px;
@@ -124,7 +116,6 @@ const CSS = `
 .lp-inp::placeholder { color: #cbd5e1; font-weight: 400; }
 .lp-inp:focus { border-color: #16a34a; background: #fff; box-shadow: 0 0 0 3px rgba(22,163,74,0.1); }
 .lp-inp:disabled { opacity: 0.55; cursor: not-allowed; }
-
 .lp-forgot {
     display: block; text-align: right;
     font-size: 0.74rem; font-weight: 600; color: #16a34a;
@@ -134,7 +125,6 @@ const CSS = `
     transition: color 0.18s;
 }
 .lp-forgot:hover { color: #15803d; text-decoration: underline; }
-
 .lp-btn {
     width: 100%; padding: 13px; border-radius: 12px;
     font-size: 0.875rem; font-weight: 700;
@@ -146,20 +136,16 @@ const CSS = `
 .lp-btn:hover:not(:disabled) { background: #15803d; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(22,163,74,0.42); }
 .lp-btn:active { transform: scale(0.98); }
 .lp-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-
 .lp-dots { display: inline-flex; align-items: center; gap: 4px; }
 .lp-dots span { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.85); display: inline-block; animation: lp-dot 1.1s ease-in-out infinite; }
 .lp-dots span:nth-child(2) { animation-delay: 0.18s; }
 .lp-dots span:nth-child(3) { animation-delay: 0.36s; }
 @keyframes lp-dot { 0%,80%,100%{transform:translateY(0);opacity:.5} 40%{transform:translateY(-5px);opacity:1} }
-
 .lp-note   { font-size: 0.74rem; color: #94a3b8; text-align: center; margin-top: 10px; line-height: 1.6; }
 .lp-switch { font-size: 0.8rem; color: #64748b; text-align: center; margin-top: 16px; }
 .lp-sw-btn { background: none; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: inherit; color: #16a34a; font-weight: 700; cursor: pointer; padding: 0; }
 .lp-sw-btn:hover { text-decoration: underline; }
-
 .lp-foot { font-size: 0.68rem; color: #94a3b8; text-align: center; padding: 0 0 28px; position: relative; z-index: 1; }
-
 @media (max-width: 520px) {
     .lp-main { padding: 28px 14px; }
     .lp-card { padding: 32px 22px 28px; border-radius: 20px; }
@@ -168,14 +154,14 @@ const CSS = `
 `;
 
 const ERR = {
-    'auth/invalid-email':             'Invalid email address format.',
-    'auth/user-not-found':            'No account found with this email.',
-    'auth/wrong-password':            'Incorrect password. Please try again.',
-    'auth/email-already-in-use':      'This email is already registered.',
-    'auth/weak-password':             'Password must be at least 6 characters.',
-    'auth/invalid-credential':        'Invalid email or password.',
-    'auth/network-request-failed':    'Network error. Check your connection.',
-    'auth/too-many-requests':         'Too many attempts. Please try again later.',
+    'auth/invalid-email':          'Invalid email address format.',
+    'auth/user-not-found':         'No account found with this email.',
+    'auth/wrong-password':         'Incorrect password. Please try again.',
+    'auth/email-already-in-use':   'This email is already registered.',
+    'auth/weak-password':          'Password must be at least 6 characters.',
+    'auth/invalid-credential':     'Invalid email or password.',
+    'auth/network-request-failed': 'Network error. Check your connection.',
+    'auth/too-many-requests':      'Too many attempts. Please try again later.',
 };
 const getMsg = (err) => ERR[err.code] || err.message || 'Something went wrong. Please try again.';
 
@@ -225,10 +211,9 @@ const PassInput = ({ placeholder, value, onChange, disabled }) => {
 };
 
 export default function Login() {
-    const navigate = useNavigate();
-    const { user } = useCurrentUser();
+    const { user, loading: authLoading } = useCurrentUser();
 
-    const [mode, setMode] = useState("login"); // "login" | "register" | "forgot"
+    const [mode, setMode] = useState("login");
     const [busy, setBusy] = useState(false);
     const [alrt, setAlrt] = useState(null);
 
@@ -240,18 +225,31 @@ export default function Login() {
     const show  = (type, msg, ttl = null) => setAlrt({ type, message: msg, title: ttl });
     const clear = () => setAlrt(null);
 
+    // ── Google Redirect থেকে ফিরে আসলে অথবা already logged in থাকলে → Home ──
+    // useAuth এর getRedirectResult user set করলে এই useEffect trigger হবে
     useEffect(() => {
-        if (user) { show('success', 'Redirecting…', 'Welcome back!'); setTimeout(() => navigate("/"), 1200); }
-    }, [user, navigate]);
+        if (!authLoading && user) {
+            window.location.replace("/");
+        }
+    }, [user, authLoading]);
+
     useEffect(() => { clear(); setPass(""); setConfirm(""); }, [mode]);
 
+    // ── Google Login — signInWithRedirect use হচ্ছে, তাই await করার পর
+    //    কিছু করার নেই। Google page এ চলে যাবে, ফিরে আসলে
+    //    getRedirectResult → onAuthStateChanged → useEffect → window.location.replace("/")
     const doGoogle = async () => {
         clear(); setBusy(true);
-        try { await loginWithGoogle(); }
-        catch (e) { show('error', getMsg(e)); }
-        finally { setBusy(false); }
+        try {
+            await loginWithGoogle();
+            // এখানে কখনো পৌঁছাবে না — redirect হয়ে Google এ চলে যাবে
+        } catch (e) {
+            show('error', getMsg(e));
+            setBusy(false);
+        }
     };
 
+    // ── Email Login / Register ──
     const doEmail = async (e) => {
         e.preventDefault(); clear();
         if (!email || !pass)                         { show('error', 'Please fill in all fields.'); return; }
@@ -266,11 +264,14 @@ export default function Login() {
                 setEmail(""); setPass(""); setConfirm(""); setName(""); setMode("login");
             } else {
                 await loginWithEmail(email, pass);
+                // Email login success → hard redirect
+                window.location.replace("/");
             }
         } catch (e) { show('error', getMsg(e)); }
         finally { setBusy(false); }
     };
 
+    // ── Forgot Password ──
     const doForgot = async (e) => {
         e.preventDefault(); clear();
         if (!email) { show('error', 'Please enter your email address.'); return; }
@@ -302,7 +303,6 @@ export default function Login() {
                         <h1 className="lp-h1">{heading}</h1>
                         <p className="lp-sub">{subtext}</p>
 
-                        {/* ── Google — শুধু login/register এ ── */}
                         {mode !== 'forgot' && (
                             <>
                                 <button className="lp-google-btn" onClick={doGoogle} disabled={busy} type="button">
@@ -317,7 +317,6 @@ export default function Login() {
                             </>
                         )}
 
-                        {/* ── Forgot Password ── */}
                         {mode === 'forgot' && (
                             <form onSubmit={doForgot}>
                                 {alrt && <Alert type={alrt.type} title={alrt.title} message={alrt.message} onDismiss={clear} />}
@@ -334,7 +333,6 @@ export default function Login() {
                             </form>
                         )}
 
-                        {/* ── Email form ── */}
                         {mode !== 'forgot' && (
                             <form onSubmit={doEmail}>
                                 {alrt && <Alert type={alrt.type} title={alrt.title} message={alrt.message} onDismiss={clear} />}
