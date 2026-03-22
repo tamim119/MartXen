@@ -49,7 +49,7 @@ const CSS = `
     width: 64px; 
 }
 
-/* ── Mobile override (ONLY for mobile) ── */
+/* ── Mobile override ── */
 @media (max-width: 768px) {
     .asb-root {
         position: fixed !important; 
@@ -60,6 +60,11 @@ const CSS = `
         transform: translateX(-100%); 
         box-shadow: none;
         transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+        /* ✅ KEY FIX: flex column so scroll area can fill remaining height */
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding-bottom: 0 !important;
     }
     
     .asb-root.mobile-open {
@@ -73,6 +78,21 @@ const CSS = `
     
     .asb-mobile-close { 
         display: flex !important; 
+    }
+
+    /* ✅ KEY FIX: Scroll wrapper — fills leftover space and scrolls */
+    .asb-scroll-area {
+        flex: 1 1 0% !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 24px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .asb-scroll-area::-webkit-scrollbar {
+        display: none;
     }
 }
 
@@ -157,6 +177,7 @@ const CSS = `
     margin-bottom: 8px; 
     overflow: visible;
     transition: padding 0.25s, gap 0.25s;
+    flex-shrink: 0;
 }
 
 .asb-root.collapsed .asb-profile {
@@ -512,6 +533,7 @@ const AdminSidebar = ({ mobileOpen, onMobileClose, pendingPlusCount = 0 }) => {
         <>
             <style>{CSS}</style>
 
+            {/* Backdrop */}
             <div
                 className={"asb-backdrop" + (mobileOpen ? " open" : "")}
                 onClick={onMobileClose}
@@ -523,7 +545,7 @@ const AdminSidebar = ({ mobileOpen, onMobileClose, pendingPlusCount = 0 }) => {
                 mobileOpen ? "mobile-open" : "",
             ].filter(Boolean).join(" ")}>
 
-                {/* Mobile close */}
+                {/* ── Mobile close header — sticky at top, never scrolls ── */}
                 <div className="asb-mobile-close">
                     <span className="asb-mobile-close-title">Admin Panel</span>
                     <button className="asb-mobile-close-btn" onClick={onMobileClose}>
@@ -531,7 +553,7 @@ const AdminSidebar = ({ mobileOpen, onMobileClose, pendingPlusCount = 0 }) => {
                     </button>
                 </div>
 
-                {/* Desktop toggle */}
+                {/* ── Desktop toggle ── */}
                 <div className="asb-toggle">
                     <button
                         className="asb-toggle-btn"
@@ -542,33 +564,42 @@ const AdminSidebar = ({ mobileOpen, onMobileClose, pendingPlusCount = 0 }) => {
                     </button>
                 </div>
 
-                {/* Profile */}
-                <div className="asb-profile">
-                    <div className="asb-favicon-wrap">
-                        <img src="/favicon.png" alt="logo" className="asb-favicon" />
+                {/*
+                    ✅ asb-scroll-area:
+                    • Desktop → normal flow, no scroll needed
+                    • Mobile  → flex:1, min-height:0, overflow-y:auto, touch scroll
+                */}
+                <div className="asb-scroll-area">
+
+                    {/* Profile */}
+                    <div className="asb-profile">
+                        <div className="asb-favicon-wrap">
+                            <img src="/favicon.png" alt="logo" className="asb-favicon" />
+                        </div>
+                        <p className="asb-name">Admin Panel</p>
+                        <span className="asb-role">
+                            <span className="asb-role-dot" />
+                            Administrator
+                        </span>
                     </div>
-                    <p className="asb-name">Admin Panel</p>
-                    <span className="asb-role">
-                        <span className="asb-role-dot" />
-                        Administrator
-                    </span>
+
+                    {/* Main nav */}
+                    <p className="asb-nav-label">MENU</p>
+                    <nav className="asb-nav">{renderLinks(mainLinks)}</nav>
+
+                    <div className="asb-nav-divider" />
+
+                    {/* Users nav */}
+                    <p className="asb-nav-label">USERS</p>
+                    <nav className="asb-nav">{renderLinks(userLinks)}</nav>
+
+                    <div className="asb-nav-divider" />
+
+                    {/* Settings nav */}
+                    <p className="asb-nav-label">SETTINGS</p>
+                    <nav className="asb-nav">{renderLinks(settingsLinks)}</nav>
+
                 </div>
-
-                {/* Main nav */}
-                <p className="asb-nav-label">MENU</p>
-                <nav className="asb-nav">{renderLinks(mainLinks)}</nav>
-
-                <div className="asb-nav-divider" />
-
-                {/* Users nav */}
-                <p className="asb-nav-label">USERS</p>
-                <nav className="asb-nav">{renderLinks(userLinks)}</nav>
-
-                <div className="asb-nav-divider" />
-
-                {/* Settings nav */}
-                <p className="asb-nav-label">SETTINGS</p>
-                <nav className="asb-nav">{renderLinks(settingsLinks)}</nav>
 
             </aside>
         </>

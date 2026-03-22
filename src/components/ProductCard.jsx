@@ -1,5 +1,5 @@
 import { StarIcon, ShoppingCart, Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../lib/features/cart/cartSlice';
@@ -103,9 +103,14 @@ const CSS = `
 `;
 
 const ProductCard = ({ product }) => {
-    const currency    = import.meta.env.VITE_CURRENCY_SYMBOL || '$';
-    const dispatch    = useDispatch();
+    const currency     = import.meta.env.VITE_CURRENCY_SYMBOL || '$';
+    const dispatch     = useDispatch();
+    const navigate     = useNavigate();
     const isWishlisted = useSelector(selectIsWishlisted(product.id));
+
+    // ✅ Auth check — আপনার Redux auth slice অনুযায়ী path পরিবর্তন করুন
+    const user = useSelector((state) => state.auth?.user);
+
     const [added, setAdded] = useState(false);
 
     const rating      = Math.round(product.avgRating || 0);
@@ -119,6 +124,13 @@ const ProductCard = ({ product }) => {
 
     const handleCart = (e) => {
         e.preventDefault();
+
+        // ✅ Logged out হলে login page-এ redirect
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
         dispatch(addToCart({ ...product, qty: 1 }));
         setAdded(true);
         setTimeout(() => setAdded(false), 1500);
@@ -126,6 +138,13 @@ const ProductCard = ({ product }) => {
 
     const handleWish = (e) => {
         e.preventDefault();
+
+        // ✅ Wishlist-এও একই check (optional, চাইলে রাখুন)
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
         dispatch(toggleWishlist(product.id));
     };
 
